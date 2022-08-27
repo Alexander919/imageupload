@@ -1,0 +1,139 @@
+<% layout("layouts/boiler") %>
+
+    <h1>Test add images</h1>
+    <!-- <form id="mem-form" method="POST" enctype="multipart/form-data"> -->
+        <!-- <label for="img">Select image to upload:</label> -->
+        <!-- <input type="file" id="img" name="test_images" multiple accept="image/*"> -->
+        <!-- <br> -->
+        <!-- <input type="submit" value="Upload"> -->
+    <!-- </form> -->
+
+
+    <input class="hidden" type="file" id="fileElem" multiple accept="image/*">
+    <a href="#" id="fileSelect">Add some files</a>
+    <div id="fileList">
+        <p>No files selected!</p>
+    </div>
+
+
+    <script>
+        //create a global array of all Files
+        //const FilesArr = [];
+        const FilesMap = new Map();
+
+        const fileElem = document.getElementById("fileElem"),
+        fileSelect = document.getElementById("fileSelect"),
+        fileList = document.getElementById("fileList");
+
+        fileSelect.addEventListener("click", (e) => {
+            if (fileElem) {
+                fileElem.click();
+            }
+            e.preventDefault(); // prevent navigation to "#"
+        }, false);
+
+        fileElem.addEventListener("change", handleFiles, false);
+
+        function handleFiles() {
+            //add new Files to the global array of Files
+            for (let file of this.files) {
+                //FilesArr.push({ file, id: Date.now() });
+                //TODO: generate unique id
+                const date = Date.now();
+                FilesMap.set(date, file);
+                console.log(date);
+            }
+
+            //change this.files to represend the global array
+            const dataTransfer = new DataTransfer();
+            //FilesArr.forEach(({ file }) => dataTransfer.items.add(file));
+            FilesMap.forEach(file => dataTransfer.items.add(file));
+            //update contents of the input
+            this.files = dataTransfer.files;
+
+            console.log(this.files);
+
+            //on delete modify the global array of Files
+
+            if (!FilesMap.size) {
+                fileList.innerHTML = "<p>No files selected!</p>";
+            } else {
+                const { html } = getHTML(FilesMap);
+                fileList.innerHTML = html;
+                fileList.querySelectorAll(".delete").forEach(delElement => {
+                    delElement.addEventListener("click", function() {
+                        const imageEl = this.closest(".image");
+                        const id = parseInt(imageEl.dataset.id);
+
+                        imageEl.remove();
+                        FilesMap.delete(id);
+                        
+                    });
+                });
+            }
+
+            //if (!FilesArr.length) {
+            //    fileList.innerHTML = "<p>No files selected!</p>";
+            //} else {
+            //    const { html } = getHTML(FilesArr);
+            //    fileList.innerHTML = html;
+            //    fileList.querySelectorAll(".delete").forEach(delElement => {
+            //        delElement.addEventListener("click", function() {
+            //            const imageEl = this.closest(".image");
+            //            const id = imageEl.dataset.id;
+
+            //            imageEl.remove();
+            //            
+            //        });
+            //    });
+            //}
+        } 
+        //function getHTML(files) {
+        //    let html = "";
+        //    for(const fileObj of files) {
+        //        const { file, id } = fileObj;
+        //        html += `
+        //            <div class="image" data-id="${ id }">
+        //                <ul>
+        //                    <li>Name: ${ file.name } </li>
+        //                    <li>Size: ${ file.size } </li>
+        //                </ul>
+        //                <div>
+        //                    <img height="100" onload="${URL.revokeObjectURL(file.src)}" src="${URL.createObjectURL(file)}">
+        //                </div>
+        //                <div class="delete">&#9851;</div>
+        //            </div>
+        //        `;
+        //    }
+
+        //    return { html: `
+        //        <div class="images">
+        //            ${ html }
+        //        </div>`
+        //    };
+        //}
+
+        function getHTML(filesMap) {
+            let html = "";
+            filesMap.forEach((file, id) => {
+                html += `
+                    <div class="image" data-id="${ id }">
+                        <ul>
+                            <li>Name: ${ file.name } </li>
+                            <li>Size: ${ file.size } </li>
+                        </ul>
+                        <div>
+                            <img height="100" onload="${URL.revokeObjectURL(file.src)}" src="${URL.createObjectURL(file)}">
+                        </div>
+                        <div class="delete">&#9851;</div>
+                    </div>
+                `;
+            });
+
+            return { html: `
+                <div class="images">
+                    ${ html }
+                </div>`
+            };
+        }
+    </script>

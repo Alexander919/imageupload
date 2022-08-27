@@ -25,8 +25,13 @@ const storage = new CloudinaryStorage({
     //public_id: (req, file) => 'computed-filename-using-request',
   }
 });
-//const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+
+const test_storage = multer.memoryStorage();
+const mem_upload = multer({ test_storage });
+
+
 
 
 
@@ -46,6 +51,15 @@ app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 app.engine("ejs", ejs_mate);
 app.use(express.static('public'));
+
+
+app.get("/test", (req, res) => {
+    res.render("test");
+});
+app.post("/test", mem_upload.array("test_images"), (req, res) => {
+    console.log(req.files);
+    res.end();
+});
 
 
 app.get("/", async (req, res) => {

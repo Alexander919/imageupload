@@ -11,6 +11,12 @@
     border: 1px solid
 }
 
+.delete:hover {
+    background-color: blue;
+    color: white;
+    cursor: pointer;
+}
+
 #notify-message {
   position: fixed; 
   width: 40vw; 
