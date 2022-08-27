@@ -1,0 +1,34 @@
+<% layout("layouts/boiler") %>
+<h1>Edit</h1>
+
+<form id="editForm" action="/edit" method="POST">
+    <div>
+        <label for="img">Add images to upload:</label>
+        <input type="file" id="img" name="images" multiple accept="image/*">
+    </div>
+    <br>
+    <div class="images">
+    <% images.forEach(({ _id, path, originalname, size, filename, preview }, i) => { %>
+        <div class="image">
+            <ul>
+                <li>Name: <%= originalname %></li>
+                <li>Size: <%= size %></li>
+            </ul>
+            <div>
+                <img src="<%= preview %>">
+                <br>
+                <label for="image<%= i %>">Delete</label>
+                <input type="checkbox" id="image<%= i %>" name="delete[]" value="<%= filename %>">
+            </div>
+        </div>
+    <% }) %>
+    </div>
+    <br>
+    <input type="submit" value="Update">
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        imageUpload("editForm", "notify-message", "http://localhost:3000/edit");
+    });
+</script>

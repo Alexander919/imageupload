@@ -1,0 +1,24 @@
+.hidden {
+    display: none;
+}
+
+.images {
+    display: flex;
+}
+
+.image {
+    flex: 1;
+    border: 1px solid
+}
+
+#notify-message {
+  position: fixed; 
+  width: 40vw; 
+  margin: auto; 
+  top: 2px;
+  left: 0; 
+  right: 0; 
+  z-index: 2;
+  border: 1px solid;
+  text-align: center;
+}
