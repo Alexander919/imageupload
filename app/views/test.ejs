@@ -1,122 +1,65 @@
 <% layout("layouts/boiler") %>
 
     <h1>Test add images</h1>
-    <!-- <form id="mem-form" method="POST" enctype="multipart/form-data"> -->
-        <!-- <label for="img">Select image to upload:</label> -->
-        <!-- <input type="file" id="img" name="test_images" multiple accept="image/*"> -->
-        <!-- <br> -->
-        <!-- <input type="submit" value="Upload"> -->
-    <!-- </form> -->
-
-
     <input class="hidden" type="file" id="fileElem" multiple accept="image/*">
     <a href="#" id="fileSelect">Add some files</a>
     <div id="fileList">
         <p>No files selected!</p>
     </div>
 
-
     <script>
-        //create a global array of all Files
-        //const FilesArr = [];
+        //create a global Map of all Files
         const FilesMap = new Map();
 
         const fileElem = document.getElementById("fileElem"),
         fileSelect = document.getElementById("fileSelect"),
         fileList = document.getElementById("fileList");
 
-        fileSelect.addEventListener("click", (e) => {
-            if (fileElem) {
-                fileElem.click();
-            }
+        fileSelect.addEventListener("click", e => {
+            if (fileElem) fileElem.click();
             e.preventDefault(); // prevent navigation to "#"
-        }, false);
+        });
 
-        fileElem.addEventListener("change", handleFiles, false);
-
-        function handleFiles() {
+        fileElem.addEventListener("change", function() {
             //add new Files to the global array of Files
             for (let file of this.files) {
-                //FilesArr.push({ file, id: Date.now() });
-                //TODO: generate unique id
-                const date = Date.now();
-                FilesMap.set(date, file);
-                console.log(date);
+                //const id = Array.from({length: 1000000}, () => `${Date.now()}${Math.random().toString(16).slice(2)}`);
+                //console.log((new Set(id)).size); //1000000
+                //generate unique id(tested with 1 million entries)
+                const id = `${Date.now()}${Math.random().toString(16).slice(2)}`;
+                FilesMap.set(id, file);
             }
-
             //change this.files to represend the global array
             const dataTransfer = new DataTransfer();
-            //FilesArr.forEach(({ file }) => dataTransfer.items.add(file));
             FilesMap.forEach(file => dataTransfer.items.add(file));
-            //update contents of the input
+            //update contents of the input element
             this.files = dataTransfer.files;
 
-            console.log(this.files);
+            console.log(FilesMap);
 
-            //on delete modify the global array of Files
-
-            if (!FilesMap.size) {
-                fileList.innerHTML = "<p>No files selected!</p>";
-            } else {
-                const { html } = getHTML(FilesMap);
+            if(FilesMap.size) {
+                const { html } = getImagesHTML(FilesMap);
                 fileList.innerHTML = html;
+                //If multiple identical EventListeners are registered on the same EventTarget with the same parameters the duplicate instances are discarded. 
+                //They do not cause the EventListener to be called twice and since they are discarded they do not need to be removed with the removeEventListener method.
                 fileList.querySelectorAll(".delete").forEach(delElement => {
                     delElement.addEventListener("click", function() {
                         const imageEl = this.closest(".image");
                         const id = parseInt(imageEl.dataset.id);
 
+                        //remove the div from the DOM
                         imageEl.remove();
+                        //on delete modify the global map of Files
                         FilesMap.delete(id);
-                        
                     });
                 });
             }
+        });
 
-            //if (!FilesArr.length) {
-            //    fileList.innerHTML = "<p>No files selected!</p>";
-            //} else {
-            //    const { html } = getHTML(FilesArr);
-            //    fileList.innerHTML = html;
-            //    fileList.querySelectorAll(".delete").forEach(delElement => {
-            //        delElement.addEventListener("click", function() {
-            //            const imageEl = this.closest(".image");
-            //            const id = imageEl.dataset.id;
-
-            //            imageEl.remove();
-            //            
-            //        });
-            //    });
-            //}
-        } 
-        //function getHTML(files) {
-        //    let html = "";
-        //    for(const fileObj of files) {
-        //        const { file, id } = fileObj;
-        //        html += `
-        //            <div class="image" data-id="${ id }">
-        //                <ul>
-        //                    <li>Name: ${ file.name } </li>
-        //                    <li>Size: ${ file.size } </li>
-        //                </ul>
-        //                <div>
-        //                    <img height="100" onload="${URL.revokeObjectURL(file.src)}" src="${URL.createObjectURL(file)}">
-        //                </div>
-        //                <div class="delete">&#9851;</div>
-        //            </div>
-        //        `;
-        //    }
-
-        //    return { html: `
-        //        <div class="images">
-        //            ${ html }
-        //        </div>`
-        //    };
-        //}
-
-        function getHTML(filesMap) {
-            let html = "";
-            filesMap.forEach((file, id) => {
-                html += `
+        function getImagesHTML(filesMap) {
+            //Array.from(Iterable, mapFn)
+            html = Array.from(filesMap, ([ id, file ]) => {
+                return  `
                     <div class="image" data-id="${ id }">
                         <ul>
                             <li>Name: ${ file.name } </li>
@@ -132,7 +75,7 @@
 
             return { html: `
                 <div class="images">
-                    ${ html }
+                    ${ html.join("\n") }
                 </div>`
             };
         }
