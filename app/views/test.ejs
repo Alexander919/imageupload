@@ -9,6 +9,7 @@
 
     <script>
         //create a global Map of all Files
+        //map: id -> File
         const FilesMap = new Map();
 
         const fileElem = document.getElementById("fileElem"),
@@ -16,8 +17,8 @@
         fileList = document.getElementById("fileList");
 
         fileSelect.addEventListener("click", e => {
-            if (fileElem) fileElem.click();
             e.preventDefault(); // prevent navigation to "#"
+            if (fileElem) fileElem.click();
         });
 
         fileElem.addEventListener("change", function() {
@@ -29,7 +30,7 @@
                 const id = `${Date.now()}${Math.random().toString(16).slice(2)}`;
                 FilesMap.set(id, file);
             }
-            //change this.files to represend the global array
+            //change this.files to represend the global mapping
             const dataTransfer = new DataTransfer();
             FilesMap.forEach(file => dataTransfer.items.add(file));
             //update contents of the input element
@@ -45,9 +46,9 @@
                 fileList.querySelectorAll(".delete").forEach(delElement => {
                     delElement.addEventListener("click", function() {
                         const imageEl = this.closest(".image");
-                        const id = parseInt(imageEl.dataset.id);
+                        const id = imageEl.dataset.id;
 
-                        //remove the div from the DOM
+                        //remove the div with class .image from the DOM
                         imageEl.remove();
                         //on delete modify the global map of Files
                         FilesMap.delete(id);
