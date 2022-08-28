@@ -1,34 +1,133 @@
 <% layout("layouts/boiler") %>
-<h1>Edit</h1>
+    <h1>Edit</h1>
 
-<form id="editForm" action="/edit" method="POST">
-    <div>
-        <label for="img">Add images to upload:</label>
-        <input type="file" id="img" name="images" multiple accept="image/*">
-    </div>
-    <br>
-    <div class="images">
-    <% images.forEach(({ _id, path, originalname, size, filename, preview }, i) => { %>
-        <div class="image">
-            <ul>
-                <li>Name: <%= originalname %></li>
-                <li>Size: <%= size %></li>
-            </ul>
+    <form id="editForm" action="/edit" method="POST">
+        <div>
+            <label for="fileElem">Add images to upload:</label>
+            <!-- <input type="file" id="img" name="images" multiple accept="image/*"> -->
+            <br>
             <div>
-                <img src="<%= preview %>">
-                <br>
-                <label for="image<%= i %>">Delete</label>
-                <input type="checkbox" id="image<%= i %>" name="delete[]" value="<%= filename %>">
+                <input class="hidden" type="file" id="fileElem" name="images" multiple accept="image/*">
+                <a href="#" id="fileSelect">Click to add images</a>
             </div>
-        </div>
-    <% }) %>
-    </div>
-    <br>
-    <input type="submit" value="Update">
-</form>
+            <div id="fileList">
+                <p>No files selected!</p>
+            </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        imageUpload("editForm", "notify-message", "http://localhost:3000/edit");
-    });
-</script>
+        </div>
+        <br>
+        <hr>
+        <br>
+        <div class="images">
+            <% images.forEach(({ _id, path, originalname, size, filename, preview }, i)=> { %>
+                <div class="image">
+                    <ul>
+                        <li>Name: <%= originalname %>
+                        </li>
+                        <li>Size: <%= size %>
+                        </li>
+                    </ul>
+                    <div>
+                        <img src="<%= preview %>">
+                        <br>
+                        <label for="image<%= i %>">Delete</label>
+                        <input type="checkbox" id="image<%= i %>" name="delete[]" value="<%= filename %>">
+                    </div>
+                </div>
+                <% }) %>
+        </div>
+        <br>
+        <input type="submit" value="Update">
+    </form>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            //create a global Map of all Files
+            //map: id -> File
+            const FilesMap = new Map();
+
+            const fileElem = document.getElementById("fileElem"),
+                fileSelect = document.getElementById("fileSelect"),
+                fileList = document.getElementById("fileList");
+
+            //register submit event
+            createSubmitImageUploadEvent("editForm", "edit", updateFileInput, FilesMap, fileElem);
+
+            //change <input type="file">.files to represent the FilesMap
+            function updateFileInput(filesMap, fileElem) {
+                const dataTransfer = new DataTransfer();
+                FilesMap.forEach(file => dataTransfer.items.add(file));
+                //update contents of the file-input element
+                fileElem.files = dataTransfer.files;
+            }
+
+            fileSelect.addEventListener("click", e => {
+                e.preventDefault(); // prevent navigation to "#"
+                if (fileElem) fileElem.click();
+            });
+
+            //triggered when we 'Open' new images
+            fileElem.addEventListener("change", function() {
+                //add new Files to FilesMap
+                //TODO: add local storage
+                for (let file of this.files) {
+                    //const id = Array.from({length: 1000000}, () => `${Date.now()}${Math.random().toString(16).slice(2)}`);
+                    //console.log((new Set(id)).size); //1000000
+                    //generate unique id(tested with 1 million entries)
+                    const id = `${Date.now()}${Math.random().toString(16).slice(2)}`;
+                    FilesMap.set(id, file);
+                }
+                //const dataTransfer = new DataTransfer();
+                //FilesMap.forEach(file => dataTransfer.items.add(file));
+                ////update contents of the input element
+                //this.files = dataTransfer.files;
+
+                console.log(FilesMap);
+
+                if (FilesMap.size) {
+                    const { html } = getImagesHTML(FilesMap);
+                    fileList.innerHTML = html;
+                    //If multiple identical EventListeners are registered on the same EventTarget with the same parameters the duplicate instances are discarded. 
+                    //They do not cause the EventListener to be called twice and since they are discarded they do not need to be removed with the removeEventListener method.
+                    fileList.querySelectorAll(".delete").forEach(delElement => {
+                        delElement.addEventListener("click", function () {
+                            const imageEl = this.closest(".image");
+                            const id = imageEl.dataset.id;
+                            //remove the div with class .image from the DOM
+                            imageEl.remove();
+                            //on delete modify the global map of Files
+                            //TODO: this.files is not updated
+                            FilesMap.delete(id);
+                        });
+                    });
+                }
+            });
+
+            function getImagesHTML(filesMap) {
+                //Array.from(Iterable, mapFn)
+                html = Array.from(filesMap, ([id, file]) => {
+                    return `
+                    <div class="image" data-id="${id}">
+                        <ul>
+                            <li>Name: ${file.name} </li>
+                            <li>Size: ${file.size} </li>
+                        </ul>
+                        <div>
+                            <img height="100" onload="${URL.revokeObjectURL(file.src)}" src="${URL.createObjectURL(file)}">
+                        </div>
+                        <div class="delete">&#9851;</div>
+                    </div>
+                `;
+                });
+
+                return {
+                    html: `
+                <div class="images">
+                    ${html.join("\n")}
+                </div>`
+                };
+            }
+        });
+
+    </script>

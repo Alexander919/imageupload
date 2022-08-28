@@ -19,7 +19,7 @@ const imageSchema = new mongoose.Schema({
 });
 
 imageSchema.virtual("preview").get(function() {
-    return this.path.replace("/upload", "/upload/h_200");
+    return this.path.replace("/upload", "/upload/h_100");
 });
 
 module.exports = mongoose.model('Image', imageSchema);

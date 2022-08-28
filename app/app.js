@@ -91,14 +91,14 @@ app.get("/edit", async (req, res) => {
 app.post("/edit", upload.array("images"), async (req, res) => {
     const uploaded = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
     await Image.insertMany(uploaded);
-
     //campground.updateOne({ $pull: { images: { filename: { $in: req.body.delete }}}});
     //forEach does NOT wait on promises!!
-    req.body.delete.forEach(filename => {
-        cloudinary.uploader.destroy(filename);
-        Image.findOneAndDelete({ filename });
-    });
-
+    if(req.body.delete) {
+        for(filename of req.body.delete) {
+            cloudinary.uploader.destroy(filename);
+            await Image.findOneAndDelete({ filename });
+        }
+    }
     console.log(req.body);
     res.send({ redirect: "/" });
 });
