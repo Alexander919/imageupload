@@ -52,15 +52,20 @@ app.set("view engine", "ejs");
 app.engine("ejs", ejs_mate);
 app.use(express.static('public'));
 
-
-app.get("/test", (req, res) => {
-    res.render("test");
+//testing
+app.get("/test", async (req, res) => {
+    const images = await Image.find({});
+    res.render("test", { images });
 });
+//app.get("/gethtml", (req, res) => {
+//    res.render("gethtml", { heading: "This is my heading"});
+//});
 app.post("/test", mem_upload.array("test_images"), (req, res) => {
+    console.log(req.body);
     console.log(req.files);
-    res.end();
+    res.send({ redirect: "/test" });
 });
-
+//testing
 
 app.get("/", async (req, res) => {
     const images = await Image.find({});
@@ -102,16 +107,6 @@ app.post("/edit", upload.array("images"), async (req, res) => {
     console.log(req.body);
     res.send({ redirect: "/" });
 });
-
-//app.post("/", async (req, res, next) => {
-//    upload.array("images")(req, res, next);
-//    await res.render("loading");
-//}, async (req, res) => {
-//    console.log(req.files);
-//    console.log(req.body);
-//    await res.render("index");
-//});
-
 
 app.listen(3000, () => {
     console.log("Server is running on port 3000");
