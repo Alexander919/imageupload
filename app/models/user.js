@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.statics.findByEmailAndAuth = async function(email, password) {
+    console.log("I AM RUNNING");
     const user = await this.findOne({ email });
     if(user) {
         const isEqual = await bcrypt.compare(password, user.password);
@@ -27,7 +28,7 @@ userSchema.statics.findByEmailAndAuth = async function(email, password) {
     return null;
 };
 
-userSchema.statics.hashAndRegister = async function(username, email, password) {
+userSchema.statics.hashPasswordAndCreate = async function(username, email, password) {
     try {
         const hashedPasswd = await bcrypt.hash(password, 14);
         const newUser = await this.create({

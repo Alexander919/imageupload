@@ -1,6 +1,6 @@
 <% layout("layouts/boiler") %>
 <h1>All images</h1>
-<% console.log(_locals, "all images") %> 
+<%# console.log(_locals, "all images") %> 
 <% images.forEach((img, i) => { %>
     <img src="<%= img.preview %>">
 <% }) %>
