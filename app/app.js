@@ -1,4 +1,4 @@
-if(process.env.NODE_ENV !== "prod")
+if(process.env.NODE_ENV !== "production")
     require("dotenv").config();
 
 const { ApplicationError } = require("./helpers/error");
@@ -21,6 +21,19 @@ const Image = require("./models/image");
 //User Schema
 const User = require("./models/user");
 
+const { validateSeq,
+        validateSignInEmail,
+        validateSignInPassword,
+        loginUser,
+        checkValidationErrors,
+        validateRegisterUser,
+        validateRegisterEmail,
+        validateRegisterPassword,
+        validateRegisterConfirm,
+        registerUser
+        } = require("./helpers/validation");
+const { render } = require("ejs");
+
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.API_KEY,
@@ -38,16 +51,15 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 
-const test_storage = multer.memoryStorage();
-const mem_upload = multer({ test_storage });
+//const test_storage = multer.memoryStorage();
+//const mem_upload = multer({ test_storage });
+
 //MongoDB setup
 main().catch(err => console.log(err));
 
 async function main() {
     await mongoose.connect('mongodb://databaseserver:27017/imageupload');
     console.log("Database connected.");
-    //const photo = new Image({ name: 'kitten.jpg', url: "https://unsplash.com/photos/vCSz54kStV4" });
-    //await photo.save();
 }
 const app = express();
 
@@ -147,60 +159,16 @@ app.get("/signin", (req, res) => {
     res.render("signin");
 });
 
-const validate = validations => {
-    return async (req, res, next) => {
-        for (let val of validations) {
-            const result = await val.run(req);
-            //stop all validations is there is an error anywhere
-            if (result.errors.length) {
-                break;
-            }
-        }
-
-        const error = validationResult(req);
-        if (error.isEmpty()) { //no error
-            return next();
-        }
-
-        return res.render("signin", { error });
-    };
-};
 app.post("/signin", 
-    validate([
-        body("email").trim().notEmpty().withMessage("Email field can't be empty").bail().normalizeEmail().isEmail().withMessage("Not a valid email"),
-
-        body("password").trim().notEmpty().withMessage("Please provide a password").bail().custom(async (value, { req, location, path }) => {
-            const { email, password } = req.body;
-            //static method in models/user.js
-            const user = await User.findByEmailAndAuth(email, password);
-
-            if(!user) {
-                //authentication failed
-                throw new Error("Authentication failed");
-            }
-
-            req.session.userId = user._id;
-            return true;
-        })
-    ]),
+    validateSignInEmail, 
+    validateSignInPassword,
+    checkValidationErrors("signin"),
+    loginUser(), //validation ok, try and login
     handleError(async (req, res) => {
-        //const { email, password } = req.body;
-        ////static method in models/user.js
-        //const user = await User.findByEmailAndAuth(email, password);
-
-        //if(!user) {
-        //    //authentication failed
-        //    return res.render("signin", { err: "auth" });
-        //}
-        //const result = validationResult(req);
-        //console.log(result);
-
-        //if(!result.isEmpty()) {
-        //    return res.render("signin", { result });
-        //}
-        console.log("Success");
         const returnTo = req.session.rememberedURL;
 
+        //flash success
+        console.log("Sign In Successful");
         res.redirect(returnTo ? returnTo : "/");
 }));
 
@@ -208,21 +176,17 @@ app.get("/register", (req, res) => {
     res.render("register");
 });
 
-app.post("/register", handleError(async (req, res) => {
-    //TODO: check if passwords match
-    const { username, email, password, confirm } = req.body;
-    //static method in models/user.js
-    const newUser = await User.hashPasswordAndCreate(username, email, password);
-
-    if(!newUser) {
-        //failed to create user
-        console.log("Failed to create user");
-        return res.redirect("/register", { err: "register"});
-    }
-    console.log(newUser)
-    req.session.userId = newUser._id;
-
-    res.redirect("/");
+app.post("/register",
+    validateRegisterUser,
+    validateRegisterEmail,
+    validateRegisterPassword,
+    validateRegisterConfirm,
+    checkValidationErrors("register"),
+    registerUser(), //all ok, register user
+    handleError(async (req, res) => {
+        console.log("Registering user");
+        //flash message
+        res.redirect("/");
 }));
 //app.get("/gethtml", (req, res) => {
 //    res.render("gethtml", { heading: "This is my heading"});
@@ -232,7 +196,6 @@ app.post("/register", handleError(async (req, res) => {
 //    console.log(req.files);
 //    res.send({ redirect: "/test" });
 //});
-//testing
 
 app.get("/", handleError(async (req, res) => {
     //console.log(res.locals);
@@ -272,7 +235,7 @@ app.post("/edit", upload.array("images"), handleError(async (req, res) => {
             await Image.findOneAndDelete({ filename });
         }
     }
-    console.log(req.body);
+    //console.log(req.body);
     res.send({ redirect: "/" });
 }));
 
@@ -284,7 +247,7 @@ app.all('*', (req, res, next) => {
 //error handler
 //app.use(err, (req, res) => ...)
 app.use((err, req, res, next) => {
-    console.log("in handler");
+    console.log("in error handler");
     const { status=500 } = err;
     if (!err.message) 
         err.message = "Generic error message";

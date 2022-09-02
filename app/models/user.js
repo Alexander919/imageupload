@@ -19,7 +19,6 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.statics.findByEmailAndAuth = async function(email, password) {
-    console.log("I AM RUNNING");
     const user = await this.findOne({ email });
     if(user) {
         const isEqual = await bcrypt.compare(password, user.password);
