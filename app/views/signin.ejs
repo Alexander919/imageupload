@@ -1,0 +1,11 @@
+<% layout("layouts/boiler") %>
+
+<form method="POST">
+    <label for="email">Email</label>
+    <input id="email" type="text" name="email">
+    <p><%= helpers.getErrorForField(error, "email") %> </p>
+    <label for="password">Password</label>
+    <input id="password" type="text" name="password">
+    <p><%= helpers.getErrorForField(error, "password") %> </p>
+    <input type="submit" value="Sign in">
+</form>
