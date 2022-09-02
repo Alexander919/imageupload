@@ -8,7 +8,7 @@
             <!-- <input type="file" id="img" name="images" multiple accept="image/*"> -->
             <br>
             <div>
-                <input type="file" id="fileElem" name="test_images" multiple accept="image/*" hidden>
+                <input type="file" id="fileElem" name="images" multiple accept="image/*" hidden>
                 <a href="#" id="fileSelect">Click to add images</a>
             </div>
             <div id="fileList">
@@ -55,7 +55,8 @@
             fileList = document.getElementById("fileList");
 
         //register submit event
-        createSubmitImageUploadEvent("editForm", "test", updateFileInput, FilesMap, fileElem);
+        //params: (<form id>, <POST path>, [[func to run before fetch], [params to func]])
+        createSubmitImageUploadEvent("editForm", "edit", updateFileInput, FilesMap, fileElem);
 
         //update <input type="file">.files to represent the FilesMap
         function updateFileInput(filesMap, fileElem) {
