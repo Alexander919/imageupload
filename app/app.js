@@ -1,14 +1,13 @@
 if(process.env.NODE_ENV !== "production")
     require("dotenv").config();
 
-const { ApplicationError } = require("./helpers/error");
+const { ApplicationError, handleError } = require("./helpers/error");
+const { flash, requireSignIn, loggedInUser } = require("./helpers/middleware");
 
 const express = require("express");
 const mongoose = require("mongoose");
 const ejs_mate = require("ejs-mate");
 const { body, validationResult } = require('express-validator');
-
-//const bcrypt = require("bcrypt");
 
 //auth
 const cookieSession = require("cookie-session");
@@ -18,8 +17,6 @@ const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 //Image Schema
 const Image = require("./models/image");
-//User Schema
-const User = require("./models/user");
 
 const { validateSeq,
         validateSignInEmail,
@@ -50,7 +47,6 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage });
 
-
 //const test_storage = multer.memoryStorage();
 //const mem_upload = multer({ test_storage });
 
@@ -61,8 +57,11 @@ async function main() {
     await mongoose.connect('mongodb://databaseserver:27017/imageupload');
     console.log("Database connected.");
 }
-const app = express();
 
+const app = express();
+//setup some variables used in templates throughout the app
+app.locals.loggedInUser = null;
+app.locals.error = null;
 
 app.locals.helpers = { 
     getErrorForField: (errors, field) => {
@@ -74,7 +73,7 @@ app.locals.helpers = {
         return stringErr;
     }
 };
-app.locals.error = null;
+/////////////////////////////////////////////////////////
 
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
@@ -88,35 +87,8 @@ app.use(cookieSession({
     overwrite: true
 }));
 
-app.use(async (req, res, next) => {
-    res.locals.loggedInUser = null;
-
-    if(req.session.userId) {
-        const user = await User.findById(req.session.userId);
-        if(user) {
-            res.locals.loggedInUser = user;
-            //console.log(username);
-        } else { //client has a cookie with userId but not the database
-            req.session = null;
-        }
-    }
-    next();
-});
-
-async function requireSignIn(req, res, next) {
-    if(!req.session.userId) {
-        req.session.rememberedURL = req.originalUrl; //remember the page to return to
-        return res.redirect("/signin");
-    }
-    //const loggedInUser = await User.findById(req.session.userId);
-
-    //if(!loggedInUser) {
-    //    console.log("Internal error");
-    //    return res.redirect("/");
-    //}
-    //req.body.loggedInUser = loggedInUser;
-    next();
-}
+app.use(loggedInUser);
+app.use(flash("success", "failure"));
 
 app.set("view engine", "ejs");
 app.engine("ejs", ejs_mate);
@@ -127,15 +99,6 @@ app.get("/home", (req, res) => {
     res.send("Home");
 });
 
-function handleError(fn) {
-    return async function(req, res, next) {
-        try {
-            await fn(req, res, next);
-        } catch(err) {
-            return next(err);
-        }
-    }
-}
 //testing
 app.get("/test", handleError(async (req, res, next) => {
     //console.log(req.body);
@@ -169,7 +132,7 @@ app.post("/signin",
         const returnTo = req.session.rememberedURL;
 
         //flash success
-        console.log("Sign In Successful");
+        req.flash("success", "Welcome back!");
         res.redirect(returnTo ? returnTo : "/");
 }));
 
@@ -187,25 +150,18 @@ app.post("/register",
     handleError(async (req, res) => {
         console.log("Registering user");
         //flash message
+        req.flash("success", "You are now registered!");
         res.redirect("/");
 }));
-//app.get("/gethtml", (req, res) => {
-//    res.render("gethtml", { heading: "This is my heading"});
-//});
-//app.post("/test", mem_upload.array("test_images"), (req, res) => {
-//    console.log(req.body);
-//    console.log(req.files);
-//    res.send({ redirect: "/test" });
-//});
 
 app.get("/", handleError(async (req, res) => {
-    //console.log(res.locals);
+    console.log(req.session);
     const images = await Image.find({});
     //console.log(images);
     res.render("index", { images });
 }));
 
-app.get("/upload", (req, res) => {
+app.get("/upload", requireSignIn, (req, res) => {
     res.render("upload");
 });
 
@@ -213,9 +169,7 @@ app.post("/upload", upload.array("images"), handleError(async (req, res) => {
     const images = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
     await Image.insertMany(images);
 
-    //console.log(image);
-    //console.log(req.body);
-    //console.log(req.files);
+    req.flash("success", "Images uploaded!");
     res.send({ redirect: "/" });
 }));
 
@@ -237,6 +191,7 @@ app.post("/edit", upload.array("images"), handleError(async (req, res) => {
         }
     }
     //console.log(req.body);
+    req.flash("success", "Updated successfully!");
     res.send({ redirect: "/" });
 }));
 

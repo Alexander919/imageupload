@@ -6,6 +6,18 @@ class ApplicationError extends Error {
     }
 }
 
+//function wrapper to handle async Errors
+function handleError(fn) {
+    return async function(req, res, next) {
+        try {
+            await fn(req, res, next);
+        } catch(err) {
+            return next(err);
+        }
+    }
+}
+
 module.exports = {
-    ApplicationError
+    ApplicationError,
+    handleError
 };
