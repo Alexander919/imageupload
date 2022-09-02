@@ -3,5 +3,5 @@
 - Put environment variables for cloudinary in ./app/.env
 e.g
 CLOUD_NAME=<cloudinary cloud_name>
-API_KEY=<cloudinary api_key
+API_KEY=<cloudinary api_key>
 API_SECRET=<cloudinary api_secret>
