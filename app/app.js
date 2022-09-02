@@ -63,17 +63,18 @@ async function main() {
 }
 const app = express();
 
+
 app.locals.helpers = { 
-    getErrorForField: function(errors, field) {
+    getErrorForField: (errors, field) => {
         let stringErr = ""
-        if(errors.constructor.name === "Result") {
+        if(errors && errors.constructor.name === "Result") {
             const err = errors.mapped()[field];
             stringErr = (err && err.msg) || stringErr;
         }
         return stringErr;
     }
 };
-app.locals.error = { empty: true };
+app.locals.error = null;
 
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));

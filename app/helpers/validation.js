@@ -36,7 +36,6 @@ module.exports = {
         return (req, res, next) => {
             const result = validationResult(req);
 
-            console.log(result, "in checkValidationErrors");
             if (result.isEmpty()) { //no validation errors
                 return next();
             }
