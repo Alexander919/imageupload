@@ -1,4 +1,4 @@
-const spinnerId = "notify-message";
+const spinnerId = "loading";
 
 function showSpinner(spinnerId) {
     let spinner = null;

@@ -37,7 +37,17 @@
     filter: grayscale(100%) blur(1.5px);
 }
 
-#notify-message {
+.success {
+    background-color: green;
+    color: azure;
+}
+
+.failure {
+    background-color: red;
+    color: azure;
+}
+
+.notify-message, #loading {
   position: fixed; 
   width: 40vw; 
   margin: auto; 

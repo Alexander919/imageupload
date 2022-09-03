@@ -54,7 +54,7 @@ module.exports = {
                 return next();
             }
             //flash failure
-            console.log("Failed to create user. Possible causes: user/email exists");
+            req.flash("failure", "Failed to create user. Possible causes: user/email exists");
             return res.redirect("/register");
         }
     },
@@ -69,7 +69,7 @@ module.exports = {
                 return next();
             }
             //flash failure
-            console.log("Failed to login. Check your credentials.");
+            req.flash("failure", "Failed to login. Check your credentials.");
             res.redirect("/signin");
         }
     }
