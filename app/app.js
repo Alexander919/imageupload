@@ -93,8 +93,6 @@ app.use(flash("success", "failure"));
 app.set("view engine", "ejs");
 app.engine("ejs", ejs_mate);
 
-//TODO: input validators
-
 app.get("/home", (req, res) => {
     res.send("Home");
 });
@@ -148,7 +146,6 @@ app.post("/register",
     checkValidationErrors("register"),
     registerUser(), //all ok, register user
     handleError(async (req, res) => {
-        console.log("Registering user");
         //flash message
         req.flash("success", "You are now registered!");
         res.redirect("/");
@@ -157,7 +154,7 @@ app.post("/register",
 app.get("/", handleError(async (req, res) => {
     console.log(req.session);
     const images = await Image.find({});
-    //console.log(images);
+
     res.render("index", { images });
 }));
 
@@ -190,7 +187,7 @@ app.post("/edit", upload.array("images"), handleError(async (req, res) => {
             await Image.findOneAndDelete({ filename });
         }
     }
-    //console.log(req.body);
+
     req.flash("success", "Updated successfully!");
     res.send({ redirect: "/" });
 }));
@@ -201,7 +198,6 @@ app.all('*', (req, res, next) => {
 });
 
 //error handler
-//app.use(err, (req, res) => ...)
 app.use((err, req, res, next) => {
     console.log("in error handler");
     const { status=500 } = err;

@@ -12,7 +12,7 @@ function handleError(fn) {
         try {
             await fn(req, res, next);
         } catch(err) {
-            return next(err);
+            return next(err);//call error middleware
         }
     }
 }
