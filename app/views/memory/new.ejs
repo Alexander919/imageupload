@@ -1,0 +1,59 @@
+<% layout("layouts/boiler") %>
+
+    <h1>Create a new memory</h1>
+    <form id="new-form" action="/edit" method="POST">
+        <%# New images upload %>
+            <div>
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="title">
+
+            </div>
+            <br>
+            <div>
+                <label for="text">Text:</label>
+                <textarea name="text" id="text" cols="30" rows="10"></textarea>
+
+            </div>
+            <br>
+            <div>
+                <label for="private">Private memory?</label>
+                <input type="checkbox" id="private" name="private">
+
+            </div>
+            <br>
+
+            <div>
+                <label for="fileElem">Add images to upload:</label>
+                <!-- <input type="file" id="img" name="images" multiple accept="image/*"> -->
+                <br>
+                <div>
+                    <input type="file" id="fileElem" name="images" multiple accept="image/*" hidden>
+                    <a href="#" id="fileSelect">Click to add images</a>
+                </div>
+                <div id="fileList">
+                    <p>No files selected!</p>
+                </div>
+            </div>
+            <br>
+            <input type="submit" value="Submit">
+    </form>
+
+    <script type="module" src="/js/displayimages.js"></script>
+    <script type="module" src="/js/fileupload.js"></script>
+
+    <script type="module">
+        import { updateFileInput, displayImagesToUpload } from "/js/displayimages.js"
+        import { uploadFiles } from "/js/fileupload.js"
+
+        displayImagesToUpload("fileElem", "fileSelect", "fileList");
+
+        document.getElementById("new-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+
+            updateFileInput();
+            uploadFiles(this, "memory/new");
+        });
+
+        //createSubmitImageUploadEvent("new-form", "memory/new");
+
+    </script>

@@ -1,7 +1,8 @@
 <ul>
     <li><a href="/">Home</a></li>
     <li><a href="/edit">Edit</a></li>
-    <li><a href="/upload">Upload</a></li>
+    <li><a href="/memory/new">New Memory</a></li>
+
     <% if(loggedInUser) { %>
         <li><a href="/signout">Sign Out <%= loggedInUser.username %></a></li>
     <% } else { %>

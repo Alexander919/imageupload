@@ -17,19 +17,10 @@ const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 //Image Schema
 const Image = require("./models/image");
+const Memory = require("./models/memory");
 
-const { validateSeq,
-        validateSignInEmail,
-        validateSignInPassword,
-        loginUser,
-        checkValidationErrors,
-        validateRegisterUser,
-        validateRegisterEmail,
-        validateRegisterPassword,
-        validateRegisterConfirm,
-        registerUser
-        } = require("./helpers/validation");
-const { render } = require("ejs");
+const authRouter = require("./routes/auth");
+const memoryRouter = require("./routes/memory");
 
 cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
@@ -88,21 +79,30 @@ app.use(cookieSession({
 }));
 
 app.use(loggedInUser);
-app.use(flash("success", "failure"));
+app.use(flash("success", "failure", "error"));
+
 
 app.set("view engine", "ejs");
 app.engine("ejs", ejs_mate);
+
+
+//app.use((req, res, next) => {
+//    console.log(req.session);
+//    next();
+//});
+
+app.use(authRouter);
+app.use(memoryRouter);
 
 app.get("/home", (req, res) => {
     res.send("Home");
 });
 
 //testing
+//TODO: query string to find next 10 memories
 app.get("/test", handleError(async (req, res, next) => {
-    //console.log(req.body);
-    //console.log(req.session);
-    //throw new ApplicationError("what a fuck", 404);
-    res.render("test");
+    const memories = await Memory.find({ isPrivate: false }).populate("author");
+    res.render("test", { memories });
 }));
 app.post("/test", body("myinput").not().isEmpty().bail().withMessage("is empty").trim().escape().isLength({ min: 5 }).withMessage("my message"), (req, res) => {
     console.log(validationResult(req));
@@ -111,48 +111,7 @@ app.post("/test", body("myinput").not().isEmpty().bail().withMessage("is empty")
 });
 
 
-app.get("/signout", (req, res) => {
-    req.session = null;
-    res.redirect("/");
-});
-
-app.get("/signin", (req, res) => {
-    //console.log(req.session);
-    res.render("signin");
-});
-
-app.post("/signin", 
-    validateSignInEmail, 
-    validateSignInPassword,
-    checkValidationErrors("signin"),
-    loginUser(), //validation ok, try and login
-    handleError(async (req, res) => {
-        const returnTo = req.session.rememberedURL;
-
-        //flash success
-        req.flash("success", "Welcome back!");
-        res.redirect(returnTo ? returnTo : "/");
-}));
-
-app.get("/register", (req, res) => {
-    res.render("register");
-});
-
-app.post("/register",
-    validateRegisterUser,
-    validateRegisterEmail,
-    validateRegisterPassword,
-    validateRegisterConfirm,
-    checkValidationErrors("register"),
-    registerUser(), //all ok, register user
-    handleError(async (req, res) => {
-        //flash message
-        req.flash("success", "You are now registered!");
-        res.redirect("/");
-}));
-
 app.get("/", handleError(async (req, res) => {
-    console.log(req.session);
     const images = await Image.find({});
 
     res.render("index", { images });

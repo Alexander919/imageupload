@@ -2,15 +2,15 @@
 <form method="POST">
     <label for="username">Username</label>
     <input id="username" type="text" name="username">
+    <p><%= helpers.getErrorForField(error, "username") %> </p>
     <label for="email">Email</label>
     <input id="email" type="text" name="email">
+    <p><%= helpers.getErrorForField(error, "email") %> </p>
     <label for="password">Password</label>
     <input id="password" type="text" name="password">
+    <p><%= helpers.getErrorForField(error, "password") %> </p>
     <label for="confirm">Confirm Password</label>
     <input id="confirm" type="text" name="confirm">
+    <p><%= helpers.getErrorForField(error, "confirm") %> </p>
     <input type="submit">
 </form>
-
-    <script>
-
-    </script>

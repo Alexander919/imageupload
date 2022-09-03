@@ -30,16 +30,21 @@ function flash(...titles) {
 }
 
 async function loggedInUser(req, res, next) {
+    req.user = {};
+
     if(req.session.userId) {
         const user = await User.findById(req.session.userId);
         if(user) {
             res.locals.loggedInUser = user;
+            req.user = user;
         } else { //client has a cookie with userId but not the database
             req.session = null;
         }
     }
     next();
 }
+
+//TODO: add isAuthor middleware
 
 module.exports = {
     loggedInUser,

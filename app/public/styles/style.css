@@ -43,6 +43,11 @@
 }
 
 .failure {
+    background-color: orange;
+    color: azure;
+}
+
+.error {
     background-color: red;
     color: azure;
 }

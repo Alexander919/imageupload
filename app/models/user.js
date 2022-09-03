@@ -16,6 +16,11 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "password is required"]
     }
+    //, memories: [{type: Schema.Types.ObjectId, ref: "Memory"}]
+    //avatar
+    //first name
+    //last name
+    //date of birth
 });
 
 userSchema.statics.findByEmailAndAuth = async function(email, password) {
