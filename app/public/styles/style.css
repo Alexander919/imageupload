@@ -52,7 +52,7 @@
     color: azure;
 }
 
-.notify-message, #loading {
+.notify-message, #spinner {
   position: fixed; 
   width: 40vw; 
   margin: auto; 

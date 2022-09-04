@@ -1,7 +1,7 @@
 <% layout("layouts/boiler") %>
 
     <h1>Create a new memory</h1>
-    <form id="new-form" action="/edit" method="POST">
+    <form id="new-form" action="/memory/new" method="POST">
         <%# New images upload %>
             <div>
                 <label for="title">Title:</label>
@@ -10,6 +10,7 @@
             </div>
             <br>
             <div>
+                <!-- TODO: create an element that will show rendered output from this textarea(markdown-it module) -->
                 <label for="text">Text:</label>
                 <textarea name="text" id="text" cols="30" rows="10"></textarea>
 
@@ -37,23 +38,31 @@
             <br>
             <input type="submit" value="Submit">
     </form>
-
-    <script type="module" src="/js/displayimages.js"></script>
-    <script type="module" src="/js/fileupload.js"></script>
-
+    <!-- TODO: try and create a module out of this module and pass params to it-->
+    <!-- https://flaming.codes/en/posts/es6-import-with-parameters -->
     <script type="module">
-        import { updateFileInput, displayImagesToUpload } from "/js/displayimages.js"
-        import { uploadFiles } from "/js/fileupload.js"
+        import { updateFileInput, setupDisplayImagesToUpload } from "/js/fileimages.js"
+        import uploadData from "/js/dataupload.js"
 
-        displayImagesToUpload("fileElem", "fileSelect", "fileList");
+        const fileElem = document.getElementById("fileElem");
+        const fileSelect = document.getElementById("fileSelect");
+        const fileList = document.getElementById("fileList");
+
+        fileSelect.addEventListener("click", e => {
+            e.preventDefault(); // prevent navigation to "#"
+            if (fileElem) fileElem.click();
+        });
+
+        //setup 'change' event listener on <input type="file">
+        //params: <file input node>, <div element node>
+        setupDisplayImagesToUpload(fileElem, fileList);
+
+        //TODO: create onchange event here
 
         document.getElementById("new-form").addEventListener("submit", function(e) {
             e.preventDefault();
 
-            updateFileInput();
-            uploadFiles(this, "memory/new");
+            const formData = updateFileInput(this, fileElem.getAttribute("name"));
+            uploadData(formData, this.getAttribute("action").slice(1));
         });
-
-        //createSubmitImageUploadEvent("new-form", "memory/new");
-
     </script>
