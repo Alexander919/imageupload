@@ -1,3 +1,4 @@
+import uploadData from "/js/dataupload.js"
 //a global Map of all Files
 //map: id -> File
 const FilesMap = new Map();
@@ -9,20 +10,16 @@ function getRandomId() {
     return `${Date.now()}${Math.random().toString(16).slice(2)}`;
 }
 
-//params: <form element>, <name of file input>
-//return FormDate object
-export function updateFileInput(form, fileInputName) {
-    //const fileInput = this.form.querySelector("input[type='file']");
-    //const fileInputName = fileInput.getAttribut("name");
-    //this.formData = new FormData(this);
-
-    //this.formData.delete(fileInputName);
-    //FilesMap.forEach(file => this.formData.append(fileInputName, file));
-
-    //modify the form's fileInput to represent the FilesMap
+function updateFileInput(form, fileInputName) {
+    if(!fileInputName) {
+        const fileInput = form.querySelector("input[type='file']");
+        fileInputName = fileInput.getAttribute("name");
+    }
+    //update formData's fileInput to represent FilesMap
     const formData = new FormData(form);
     formData.delete(fileInputName);
     FilesMap.forEach(file => formData.append(fileInputName, file));
+
     return formData;
 
 //update <input type="file">.files to represent the FilesMap
@@ -32,24 +29,21 @@ export function updateFileInput(form, fileInputName) {
 //    fileElem.files = dataTransfer.files;
 }
 
-//TODO: get rid of addEventListener and return a function instead
-//TODO: rename to displayImagesToUpload
-//TODO: pass in obj with form element instead of fileInput
-export function setupDisplayImagesToUpload(fileInput, div) {
+export default function displayImagesToUpload(form, div) {
     //TODO: implement images drag and drop event
 
-    //const { form } = obj; 
-    //form.addEventListener("submit", updateFileInput.bind(obj));
-    //return function() { ... }
-
+    //update fileInput on form submit
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        const formData = updateFileInput(this);
+        uploadData(formData, this.getAttribute("action").slice(1));
+    });
     //triggered when we 'Open' new images
-    fileInput.addEventListener("change", function() {
+    return function() {
         //add new Files to FilesMap
         for (let file of this.files) {
             FilesMap.set(getRandomId(), file);
         }
-
-        console.log(FilesMap);
 
         if (FilesMap.size) {
             const { html } = getImagesHTML(FilesMap);
@@ -67,7 +61,7 @@ export function setupDisplayImagesToUpload(fileInput, div) {
                 });
             });
         }
-    });
+    };
 }
 
 function getImagesHTML(filesMap) {

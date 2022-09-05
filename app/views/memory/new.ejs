@@ -38,31 +38,5 @@
             <br>
             <input type="submit" value="Submit">
     </form>
-    <!-- TODO: try and create a module out of this module and pass params to it-->
-    <!-- https://flaming.codes/en/posts/es6-import-with-parameters -->
-    <script type="module">
-        import { updateFileInput, setupDisplayImagesToUpload } from "/js/fileimages.js"
-        import uploadData from "/js/dataupload.js"
-
-        const fileElem = document.getElementById("fileElem");
-        const fileSelect = document.getElementById("fileSelect");
-        const fileList = document.getElementById("fileList");
-
-        fileSelect.addEventListener("click", e => {
-            e.preventDefault(); // prevent navigation to "#"
-            if (fileElem) fileElem.click();
-        });
-
-        //setup 'change' event listener on <input type="file">
-        //params: <file input node>, <div element node>
-        setupDisplayImagesToUpload(fileElem, fileList);
-
-        //TODO: create onchange event here
-
-        document.getElementById("new-form").addEventListener("submit", function(e) {
-            e.preventDefault();
-
-            const formData = updateFileInput(this, fileElem.getAttribute("name"));
-            uploadData(formData, this.getAttribute("action").slice(1));
-        });
-    </script>
+    <!-- pass in arguments(query string) to the module -->
+    <script type="module" src="/js/fileinput.js?form=new-form&file=fileElem&list=fileList&select=fileSelect"></script>

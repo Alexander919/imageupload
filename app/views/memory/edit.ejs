@@ -65,35 +65,4 @@
             <input type="submit" value="Update">
     </form>
 
-    <script type="module">
-        import { updateFileInput, setupDisplayImagesToUpload } from "/js/fileimages.js"
-        import uploadData from "/js/dataupload.js"
-
-        const fileElem = document.getElementById("fileElem");
-        const fileSelect = document.getElementById("fileSelect");
-        const fileList = document.getElementById("fileList");
-
-        fileSelect.addEventListener("click", e => {
-            e.preventDefault(); // prevent navigation to "#"
-            if (fileElem) fileElem.click();
-        });
-
-        //setup 'change' event listener on <input type="file">
-        setupDisplayImagesToUpload(fileElem, fileList);
-
-        //const form = document.getElementById("edit-form");
-        //const obj = { form };
-        //fileElem.addEventListener("change", displayImagesToUpload(obj, fileList);
-
-        //form.addEventListener("submit", function(e) {
-        //    e.preventDefault();
-        //    uploadData(this.formData, this.form.getAttribute("action").slice(1));
-        //}.bind(obj));
-
-        document.getElementById("edit-form").addEventListener("submit", function(e) {
-            e.preventDefault();
-
-            const formData = updateFileInput(this, fileElem.getAttribute("name"));
-            uploadData(formData, this.getAttribute("action").slice(1));
-        });
-    </script>
+    <script type="module" src="/js/fileinput.js?form=edit-form&file=fileElem&list=fileList&select=fileSelect"></script>
