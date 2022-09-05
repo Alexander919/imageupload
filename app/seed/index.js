@@ -57,6 +57,7 @@ async function main() {
 
 main().catch(err => console.log(err));
 
+//TODO: make seeding more flexible; upload some images to cloudinary, create new Image objects, save to db and take their ids
 (async () => {
     console.log("Seed has started.");
     const memories = [];
@@ -67,7 +68,7 @@ main().catch(err => console.log(err));
             text: "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Reiciendis sint, harum aperiam inventore placeat cupiditate beatae natus aliquid iste? Tempore assumenda voluptatem quas nesciunt, unde dolore quisquam nisi facilis natus?",
             isPrivate: false,
             author: "630f6ffdf1cd145e7b70d213",
-            gallery: ["6310b0ccdff08eb486bb88a2", "631218b142419fccd7d1f092"]
+            gallery: ["6314c6a8ae9752ab7f5d8d83", "6314c6a8ae9752ab7f5d8d84"]
         };
         memories.push(memory);
     }

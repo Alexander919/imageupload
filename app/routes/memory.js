@@ -69,9 +69,34 @@ router.get("/memory/edit/:id", async (req, res) => {
 });
 
 router.post("/memory/edit/:id", upload.array("images"), async (req, res) => {
-    console.log(req.files);
+    const memory = await Memory.findByIdAndUpdate(req.params.id, { $set: { ...req.body.memory }, $pull: { gallery: { $in: req.body.delete } } }, { new: true });
+
+    if (req.body.delete) {
+        for (const toDelete of req.body.delete) {
+            const image = await Image.findByIdAndDelete(toDelete);
+            cloudinary.uploader.destroy(image.filename);
+
+            console.log(toDelete);
+            console.log(image);
+        }
+    }
+    console.log(memory);
+
+    if(req.files.length) {
+        const images = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
+        const result = await Image.insertMany(images);
+
+        memory.gallery.push(...result);
+    }
+
+    memory.isPrivate = req.body.private ? true : false;
+
+    await memory.save();
     console.log(req.body);
-    res.send({ redirect: "/test"});
+    console.log(memory);
+
+    req.flash("success", "Updated successfully!");
+    res.send({ redirect: "/test" });
 });
 
 module.exports = router;
