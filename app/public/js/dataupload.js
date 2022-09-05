@@ -37,7 +37,7 @@ export default async function uploadData(formData, path) {
         const res = await fetch(`http://localhost:3000/${path}`, {
             method: "POST",
             //body: new FormData(form),
-            body: formData,
+            body: formData
         });
         const data = await res.json();
 
