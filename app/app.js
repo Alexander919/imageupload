@@ -52,7 +52,7 @@ async function main() {
 const app = express();
 //setup some variables used in templates throughout the app
 app.locals.loggedInUser = null;
-app.locals.error = null;
+app.locals.errors = null;
 
 app.locals.helpers = { 
     getErrorForField: (errors, field) => {
@@ -102,6 +102,11 @@ app.get("/home", (req, res) => {
 //TODO: query string to find next 10 memories
 app.get("/test", handleError(async (req, res, next) => {
     const memories = await Memory.find({ isPrivate: false }).populate("author");
+    //TODO: promisify
+    //res.render("test", { memories }, (err, html) => {
+    //    //console.log(err);
+    //    console.log(html);
+    //});
     res.render("test", { memories });
 }));
 app.post("/test", body("myinput").not().isEmpty().bail().withMessage("is empty").trim().escape().isLength({ min: 5 }).withMessage("my message"), (req, res) => {

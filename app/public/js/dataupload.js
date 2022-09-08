@@ -31,21 +31,26 @@ function hideSpinner(timer) {
 
 //params: (<FormData object>, <POST path>)
 export default async function uploadData(formData, path) {
+    formData.set("fetch", "submitted by fetch function in client"); //let server know that response goes back to fetch
     const timer = showSpinner(spinnerId);
 
     try {
         const res = await fetch(`http://localhost:3000/${path}`, {
             method: "POST",
-            //body: new FormData(form),
             body: formData
         });
         const data = await res.json();
 
         hideSpinner(timer);
 
-        if (typeof data.redirect === "string")
+        if(data.render) { //html from the server
+            document.querySelector("html").innerHTML = data.render;
+        }else if (typeof data.redirect === "string")
             window.location = data.redirect;
     } catch (err) {
-        console.error(err);
+        console.dir(err);
+        //window.location = "/test";
+    } finally {
+        hideSpinner(timer);
     }
 }

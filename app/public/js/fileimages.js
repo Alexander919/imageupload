@@ -11,12 +11,13 @@ function getRandomId() {
 }
 
 function updateFileInput(form, fileInputName) {
-    if(!fileInputName) {
+    const formData = new FormData(form);
+
+    if (!fileInputName) {
         const fileInput = form.querySelector("input[type='file']");
         fileInputName = fileInput.getAttribute("name");
     }
     //update formData's fileInput to represent FilesMap
-    const formData = new FormData(form);
     formData.delete(fileInputName);
     FilesMap.forEach(file => formData.append(fileInputName, file));
 

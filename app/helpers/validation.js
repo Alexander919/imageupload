@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator');
+const { body, check, validationResult } = require('express-validator');
 const User = require("../models/user");
 
 module.exports = {
@@ -33,14 +33,28 @@ module.exports = {
     validateRegisterConfirm:
         body("confirm").trim().notEmpty().bail().withMessage("Field can't be empty").custom((val, { req }) => val === req.body.password).withMessage("Passwords do not match"),
     checkValidationErrors: renderOnErr => {
-        return (req, res, next) => {
+        return async (req, res, next) => {
             const result = validationResult(req);
 
             if (result.isEmpty()) { //no validation errors
                 return next();
             }
+            //if there are any validation errors check if submit is done by fetch. Because of dryRun it is not included with other request errors(result)
+            //const fetchError = await body("fetch").not().exists().run(req, { dryRun: true });
+            //console.log(fetchError);
 
-            res.render(renderOnErr, { error: result });
+            //fetch does not exist; submit is done using form
+            if(!req.body.fetch) {
+                return res.render(renderOnErr, { errors: result });
+            }
+
+            //fetch exists; render a page into a string(html param) and send it back as a response to 'fetch'
+            res.render(renderOnErr, { errors: result }, (err, html) => {
+                if(err) {
+                    return console.log(err);
+                }
+                res.send({ render: html });
+            });
         }
     },
     registerUser: () => {
