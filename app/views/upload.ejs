@@ -12,9 +12,12 @@
         <input type="submit" value="Upload">
     </form>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            createSubmitImageUploadEvent("upload-form", "upload");
+    <script type="module">
+        import uploadData from "/js/dataupload.js"
+
+        document.getElementById("upload-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+            uploadData(new FormData(this), "upload");
         });
         // public/js/code.js
         //fetch("http://localhost:3000/test/", {

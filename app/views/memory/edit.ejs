@@ -6,7 +6,7 @@
             <div>
                 <label for="title">Title:</label>
                 <input type="text" id="title" name="memory[title]" value="<%= memory.title %>">
-                <p><%= helpers.getErrorForField(error, "title") %> </p>
+                <p><%= helpers.getErrorForField(errors, "memory.title") %> </p>
             </div>
             <br>
             <div>

@@ -11,10 +11,6 @@ const { body, validationResult } = require('express-validator');
 
 //auth
 const cookieSession = require("cookie-session");
-//image upload and storage
-const multer = require("multer");
-const cloudinary = require("cloudinary").v2;
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
 //Image Schema
 const Image = require("./models/image");
 const Memory = require("./models/memory");
@@ -22,24 +18,37 @@ const Memory = require("./models/memory");
 const authRouter = require("./routes/auth");
 const memoryRouter = require("./routes/memory");
 
-cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.API_KEY,
-    api_secret: process.env.API_SECRET
-});
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "ImageUpload",
-    format: async (req, file) => 'jpg', // supports promises as well
-    //public_id: (req, file) => 'computed-filename-using-request',
-  }
-});
-const upload = multer({ storage });
 
-//const test_storage = multer.memoryStorage();
-//const mem_upload = multer({ test_storage });
+
+const { multer_upload_cloud } = require("./multercloud");
+//const cloudinary = require("cloudinary").v2;
+//const { CloudinaryStorage } = require("multer-storage-cloudinary");
+//const multer = require("multer");
+//
+//cloudinary.config({
+//    cloud_name: process.env.CLOUD_NAME,
+//    api_key: process.env.API_KEY,
+//    api_secret: process.env.API_SECRET
+//});
+//
+//const cloudFolder = "ImageUpload";
+//
+//const cloud_storage = new CloudinaryStorage({
+//  cloudinary,
+//  params: {
+//    folder: cloudFolder,
+//    format: 'jpg', // supports promises as well
+//    //public_id: (req, file) => 'computed-filename-using-request',
+//  }
+//});
+//
+//const multer_upload_cloud = multer({ storage: cloud_storage });
+
+
+
+
+
 
 //MongoDB setup
 main().catch(err => console.log(err));
@@ -75,7 +84,8 @@ app.use(cookieSession({
     maxAge: 1000 * 60 * 60 * 24 * 7, //expires in a week
     httpOnly: true,
     signed: true,
-    overwrite: true
+    overwrite: true,
+    //sameSite: "strict"
 }));
 
 app.use(loggedInUser);
@@ -84,12 +94,6 @@ app.use(flash("success", "failure", "error"));
 
 app.set("view engine", "ejs");
 app.engine("ejs", ejs_mate);
-
-
-//app.use((req, res, next) => {
-//    console.log(req.session);
-//    next();
-//});
 
 app.use(authRouter);
 app.use(memoryRouter);
@@ -126,11 +130,12 @@ app.get("/upload", requireSignIn, (req, res) => {
     res.render("upload");
 });
 
-app.post("/upload", upload.array("images"), handleError(async (req, res) => {
+app.post("/upload", multer_upload_cloud.array("images"), handleError(async (req, res) => {
+    console.log(req.files);
     const images = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
     await Image.insertMany(images);
 
-    req.flash("success", "Images uploaded!");
+    //req.flash("success", "Images uploaded!");
     res.send({ redirect: "/" });
 }));
 
@@ -140,7 +145,7 @@ app.get("/edit", requireSignIn, handleError(async (req, res) => {
 }));
 
 //update route
-app.post("/edit", upload.array("images"), handleError(async (req, res) => {
+app.post("/edit", multer_upload_cloud.array("images"), handleError(async (req, res) => {
     const uploaded = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
     await Image.insertMany(uploaded);
     //campground.updateOne({ $pull: { images: { filename: { $in: req.body.delete }}}});

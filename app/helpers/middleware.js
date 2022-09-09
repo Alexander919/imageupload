@@ -1,4 +1,15 @@
 const User = require("../models/user");
+const { uploadArrayCloudinaryFromMem } = require("../multercloud");
+
+
+function normalizeUploaded(files) {
+    return files.map(({ 
+        url: path, 
+        original_filename: originalname, 
+        bytes: size, 
+        public_id: filename 
+    }) => ({ path, originalname, size, filename }));
+}
 
 async function requireSignIn(req, res, next) {
     if(!req.session.userId) {
@@ -44,10 +55,24 @@ async function loggedInUser(req, res, next) {
     next();
 }
 
+async function uploadCloudFromMem(req, res, next) {
+    if (req.files && req.files.length) {
+        try {
+            const files = await uploadArrayCloudinaryFromMem(req.files); //upload files to the cloud
+            req.files = normalizeUploaded(files);
+        } catch(e) {
+            req.files = [];
+            console.error(e);
+        }
+    }
+    next();
+}
+
 //TODO: add isAuthor middleware
 
 module.exports = {
     loggedInUser,
     flash,
-    requireSignIn
+    requireSignIn,
+    uploadCloudFromMem
 };

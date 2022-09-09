@@ -5,14 +5,14 @@
         <%# New images upload %>
             <div>
                 <label for="title">Title:</label>
-                <input type="text" id="title" name="title">
-                <p><%= helpers.getErrorForField(errors, "title") %> </p>
+                <input type="text" id="title" name="memory[title]">
+                <p><%= helpers.getErrorForField(errors, "memory.title") %></p>
             </div>
             <br>
             <div>
                 <!-- TODO: create an element that will show rendered output from this textarea(markdown-it module) -->
                 <label for="text">Text:</label>
-                <textarea name="text" id="text" cols="30" rows="10"></textarea>
+                <textarea name="memory[text]" id="text" cols="30" rows="10"></textarea>
 
             </div>
             <br>
