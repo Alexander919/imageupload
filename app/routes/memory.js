@@ -5,6 +5,7 @@ const Image = require("../models/image");
 
 const { checkValidationErrors, validateMemoryTitle, validateMemoryText } = require("../helpers/validation");
 const { requireSignIn, uploadCloudFromMem } = require("../helpers/middleware");
+const { ApplicationError, handleError } = require("../helpers/error");
 
 const { multer_upload_memory, cloudinary } = require("../multercloud");
 
@@ -22,7 +23,6 @@ router.get("/memory/show/:id", async (req, res) => {
 
 
 router.get("/memory/new", requireSignIn, (req, res) => {
-    console.log(req.params);
     res.render("memory/new");
 });
 
@@ -32,10 +32,10 @@ router.post("/memory/new", requireSignIn,
     validateMemoryText,
     checkValidationErrors("memory/new"),
     uploadCloudFromMem,
-    async (req, res) => {
-        const { private, ...rest } = req.body;
+    handleError(async (req, res) => {
+        const { private, memory: memoryFields } = req.body;
 
-        const memory = new Memory(rest);
+        const memory = new Memory(memoryFields);
         memory.author = req.user._id;
         memory.isPrivate = private ? true : false;
 
@@ -47,18 +47,18 @@ router.post("/memory/new", requireSignIn,
         await memory.save();
 
         req.flash("success", "Memory created!");
-        res.send({ redirect: "/test" });
-});
+        res.send({ redirect: "/" });
+}));
 
-router.get("/memory/edit/:id", async (req, res) => {
+router.get("/memory/edit/:id", handleError(async (req, res) => {
     const memory = await Memory.findById(req.params.id).populate("gallery");
     if(memory && memory.author.equals(req.user._id)) {
         return res.render("memory/edit", { memory });
     }
 
     req.flash("error", "Action is not allowed!");
-    res.redirect("/test");
-});
+    res.redirect("/");
+}));
 
 router.post("/memory/edit/:id",
     multer_upload_memory.array("images"), 
@@ -66,7 +66,7 @@ router.post("/memory/edit/:id",
     validateMemoryText, 
     checkValidationErrors("memory/edit", Memory, "gallery"), //second and third arguments are optional when we need a Model
     uploadCloudFromMem,
-    async (req, res) => {
+    handleError(async (req, res) => {
         const memory = await Memory.findByIdAndUpdate(
             req.params.id, 
             { 
@@ -92,7 +92,7 @@ router.post("/memory/edit/:id",
         await memory.save();
 
         req.flash("success", "Updated successfully!");
-        res.send({ redirect: "/test" });
-});
+        res.send({ redirect: "/" });
+}));
 
 module.exports = router;

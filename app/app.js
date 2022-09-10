@@ -7,7 +7,7 @@ const { flash, requireSignIn, loggedInUser } = require("./helpers/middleware");
 const express = require("express");
 const mongoose = require("mongoose");
 const ejs_mate = require("ejs-mate");
-const { body, validationResult } = require('express-validator');
+//const { body, validationResult } = require('express-validator');
 
 //auth
 const cookieSession = require("cookie-session");
@@ -18,38 +18,7 @@ const Memory = require("./models/memory");
 const authRouter = require("./routes/auth");
 const memoryRouter = require("./routes/memory");
 
-
-
-
-const { multer_upload_cloud } = require("./multercloud");
-//const cloudinary = require("cloudinary").v2;
-//const { CloudinaryStorage } = require("multer-storage-cloudinary");
-//const multer = require("multer");
-//
-//cloudinary.config({
-//    cloud_name: process.env.CLOUD_NAME,
-//    api_key: process.env.API_KEY,
-//    api_secret: process.env.API_SECRET
-//});
-//
-//const cloudFolder = "ImageUpload";
-//
-//const cloud_storage = new CloudinaryStorage({
-//  cloudinary,
-//  params: {
-//    folder: cloudFolder,
-//    format: 'jpg', // supports promises as well
-//    //public_id: (req, file) => 'computed-filename-using-request',
-//  }
-//});
-//
-//const multer_upload_cloud = multer({ storage: cloud_storage });
-
-
-
-
-
-
+//const { multer_upload_cloud } = require("./multercloud");
 //MongoDB setup
 main().catch(err => console.log(err));
 
@@ -59,6 +28,7 @@ async function main() {
 }
 
 const app = express();
+
 //setup some variables used in templates throughout the app
 app.locals.loggedInUser = null;
 app.locals.errors = null;
@@ -102,68 +72,119 @@ app.get("/home", (req, res) => {
     res.send("Home");
 });
 
-//testing
 //TODO: query string to find next 10 memories
-app.get("/test", handleError(async (req, res, next) => {
-    const memories = await Memory.find({ isPrivate: false }).populate("author");
-    //TODO: promisify
-    //res.render("test", { memories }, (err, html) => {
-    //    //console.log(err);
-    //    console.log(html);
-    //});
-    res.render("test", { memories });
-}));
-app.post("/test", body("myinput").not().isEmpty().bail().withMessage("is empty").trim().escape().isLength({ min: 5 }).withMessage("my message"), (req, res) => {
-    console.log(validationResult(req));
-    console.log(req.body);
-    res.send("OK");
-});
-
-
-app.get("/", handleError(async (req, res) => {
-    const images = await Image.find({});
-
-    res.render("index", { images });
-}));
-
-app.get("/upload", requireSignIn, (req, res) => {
-    res.render("upload");
-});
-
-app.post("/upload", multer_upload_cloud.array("images"), handleError(async (req, res) => {
-    console.log(req.files);
-    const images = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
-    await Image.insertMany(images);
-
-    //req.flash("success", "Images uploaded!");
-    res.send({ redirect: "/" });
-}));
-
-app.get("/edit", requireSignIn, handleError(async (req, res) => {
-    const images = await Image.find({});
-    res.render("edit", { images });
-}));
-
-//update route
-app.post("/edit", multer_upload_cloud.array("images"), handleError(async (req, res) => {
-    const uploaded = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
-    await Image.insertMany(uploaded);
-    //campground.updateOne({ $pull: { images: { filename: { $in: req.body.delete }}}});
-    //forEach does NOT wait on promises!!
-    if(req.body.delete) {
-        for(filename of req.body.delete) {
-            cloudinary.uploader.destroy(filename);
-            await Image.findOneAndDelete({ filename });
-        }
+app.get("/", handleError(async (req, res, next) => {
+    if(!req.query.created) {
+        const memories = await Memory.find({ isPrivate: false }, { gallery: 0 }, { sort: { created: -1 }, skip: 0, limit: 2 }).populate("author");
+        return res.render("index", { memories });
     }
+    console.log(req.query.created);
+    const memories = await Memory.find({ isPrivate: false, created: { $lt: req.query.created } }, { gallery: 0, __v: 0 }, { sort: { created: -1 }, skip: 0, limit: 2 }).populate("author", "-password -email -_id -__v");
+    const match = {
+        $match: { isPrivate: false }
+    }
+    console.log(match);
+    match.$match.created = { $lt: new Date(req.query.created )};
+    console.log(match);
 
-    req.flash("success", "Updated successfully!");
-    res.send({ redirect: "/" });
+    //TODO: try Memory.aggregate
+    const agg = await Memory.aggregate([
+        //,
+        {
+            $sort: { created: -1 }
+        },
+        { 
+            $match: { created: { $lt: new Date(req.query.created) } }
+        },
+        {
+           $limit: 2
+        },
+        {
+            $lookup: { 
+                from: "users",
+                localField: "author",
+                foreignField: "_id",
+                as: "author"
+            }
+        },
+        {
+            $unwind: "$author" //single object instead of array
+        },
+        {
+            $lookup: {
+                from: "images",
+                localField: "gallery",
+                foreignField: "_id",
+                as: "gallery"
+            }
+        },
+        {
+            $project: {
+                id: 1,
+                title: 1,
+                text: 1,
+                created: { $dateToString: { date: "$created" } },
+                "author.username": 1,
+                isPrivate: 1,
+                gallery: 1
+            }
+        }
+        ]);
+    console.log("aggregation", agg[0].author);
+    res.send({ memories });
 }));
+
+//app.post("/test", body("myinput").not().isEmpty().bail().withMessage("is empty").trim().escape().isLength({ min: 5 }).withMessage("my message"), (req, res) => {
+//    console.log(validationResult(req));
+//    console.log(req.body);
+//    res.send("OK");
+//});
+
+
+//app.get("/", handleError(async (req, res) => {
+//    const images = await Image.find({});
+//
+//    res.render("index", { images });
+//}));
+
+//app.get("/upload", requireSignIn, (req, res) => {
+//    res.render("upload");
+//});
+//
+//app.post("/upload", multer_upload_cloud.array("images"), handleError(async (req, res) => {
+//    console.log(req.files);
+//    const images = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
+//    await Image.insertMany(images);
+//
+//    //req.flash("success", "Images uploaded!");
+//    res.send({ redirect: "/" });
+//}));
+//
+//app.get("/edit", requireSignIn, handleError(async (req, res) => {
+//    const images = await Image.find({});
+//    res.render("edit", { images });
+//}));
+//
+////update route
+//app.post("/edit", multer_upload_cloud.array("images"), handleError(async (req, res) => {
+//    const uploaded = req.files.map(({ path, originalname, size, filename }) => ({ path, originalname, size, filename }));
+//    await Image.insertMany(uploaded);
+//    //campground.updateOne({ $pull: { images: { filename: { $in: req.body.delete }}}});
+//    //forEach does NOT wait on promises!!
+//    if(req.body.delete) {
+//        for(filename of req.body.delete) {
+//            cloudinary.uploader.destroy(filename);
+//            await Image.findOneAndDelete({ filename });
+//        }
+//    }
+//
+//    req.flash("success", "Updated successfully!");
+//    res.send({ redirect: "/" });
+//}));
 
 //all other routes
-app.all('*', (req, res, next) => {
-    next(new ApplicationError('Could not find resource', 404));
+app.all("*", (req, res, next) => {
+    next(new ApplicationError("Could not find resource", 404));
 });
 
 //error handler

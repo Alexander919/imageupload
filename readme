@@ -2,6 +2,17 @@
 - Register for cloudinary
 - Put environment variables for cloudinary in ./app/.env
 e.g
+** .env file **
 CLOUD_NAME=<cloudinary cloud_name>
 API_KEY=<cloudinary api_key>
 API_SECRET=<cloudinary api_secret>
+** .env file end **
+
+Start containers
+$ docker-compose up --build -d 
+Attach to nodeservers stdin
+$ docker attach <nodeserver container name>
+Access nodeserver, install modules, etc
+$ docker exec -it <nodeserver container name> bash
+Access database
+$ docker exec -it <databaserver container name> bash

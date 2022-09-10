@@ -45,7 +45,7 @@ async function uploadSingleCloudinaryFromMem(file) {
 }
 
 async function uploadArrayCloudinaryFromMem(files) {
-    const uploaded = files.map(file => uploadSingle(file));
+    const uploaded = files.map(file => uploadSingleCloudinaryFromMem(file));
     return Promise.all(uploaded);
 }
 

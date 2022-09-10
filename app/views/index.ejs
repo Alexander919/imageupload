@@ -1,6 +1,57 @@
-<% layout("layouts/boiler") %>
-<h1>All images</h1>
-<%# console.log(_locals, "all images") %> 
-<% images.forEach((img, i) => { %>
-    <img src="<%= img.preview %>">
+<% layout("layouts/boiler") %> 
+<h1>All memories</h1>
+<div class="memories">
+<% memories.forEach(({ title, text, author, _id:id, isPrivate, created }) => { %>
+    <% if(!isPrivate) { %>
+    <div class="memory" style="border: 1px solid" data-date="<%= created.toISOString() %>">
+        <h1><%= title %> </h1>
+        <p><%= text %> </p>   
+        <h2><%= author.username %></h2>
+        <em><%= created.toISOString() %></em>
+        <p><a href="/memory/show/<%= id %>">Show me more</a></p>
+    </div>
+    <% } %> 
 <% }) %>
+
+</div>
+
+<script>
+//TODO: use session storage to save the last memory id or created date; then is user goes back during the current session we can load all the memories he has viewed and scroll to the bottom
+    // const lastMem = document.querySelector(".memory:last-child");
+    const memories = document.querySelector(".memories");
+    const lastMem = memories.lastElementChild;
+
+    console.log("Dataset", lastMem.dataset.date);
+
+    lastMem.addEventListener("click", e => {
+        fetch(`http://localhost:3000?created=${lastMem.dataset.date}`)
+            .then(res => res.json())
+            .then(data => {
+                console.log(data)
+                memories.insertAdjacentHTML("beforeend", getMemoriesHTML(data.memories));
+            })
+            .catch(e => {
+                console.dir(e);
+                document.querySelector("html").innerHTML = e;
+            });
+
+    });
+
+    function getMemoriesHTML(data) {
+        const html = data.map(({ title, text, author, _id:id, isPrivate, created }) => {
+            if(!isPrivate) {
+                return `
+                    <div class="memory" style="border: 1px solid" data-date="${ created }">
+                        <h1>${ title }</h1>
+                        <p>${ text }</p>
+                        <h2>${ author.username }</h2>
+                        <em>${ new Date(created).toISOString() }</em>
+                        <p><a href="/memory/show/${ id }">Show me more</a></p>
+                    </div>
+                `;
+            }
+            return null;
+        });
+        return html.filter(str => str).join("\n");
+    }
+</script>
