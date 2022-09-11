@@ -3,16 +3,15 @@
 <div class="memories">
 <% memories.forEach(({ title, text, author, _id:id, isPrivate, created }) => { %>
     <% if(!isPrivate) { %>
-    <div class="memory" style="border: 1px solid" data-date="<%= created.toISOString() %>">
+    <div class="memory" style="border: 1px solid" data-date="<%= created %>">
         <h1><%= title %> </h1>
         <p><%= text %> </p>   
         <h2><%= author.username %></h2>
-        <em><%= created.toISOString() %></em>
+        <em><%= created %></em>
         <p><a href="/memory/show/<%= id %>">Show me more</a></p>
     </div>
     <% } %> 
 <% }) %>
-
 </div>
 
 <script>
@@ -45,7 +44,7 @@
                         <h1>${ title }</h1>
                         <p>${ text }</p>
                         <h2>${ author.username }</h2>
-                        <em>${ new Date(created).toISOString() }</em>
+                        <em>${ created }</em>
                         <p><a href="/memory/show/${ id }">Show me more</a></p>
                     </div>
                 `;

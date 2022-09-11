@@ -74,64 +74,37 @@ app.get("/home", (req, res) => {
 
 //TODO: query string to find next 10 memories
 app.get("/", handleError(async (req, res, next) => {
-    if(!req.query.created) {
-        const memories = await Memory.find({ isPrivate: false }, { gallery: 0 }, { sort: { created: -1 }, skip: 0, limit: 2 }).populate("author");
-        return res.render("index", { memories });
-    }
-    console.log(req.query.created);
-    const memories = await Memory.find({ isPrivate: false, created: { $lt: req.query.created } }, { gallery: 0, __v: 0 }, { sort: { created: -1 }, skip: 0, limit: 2 }).populate("author", "-password -email -_id -__v");
-    const match = {
-        $match: { isPrivate: false }
-    }
-    console.log(match);
-    match.$match.created = { $lt: new Date(req.query.created )};
-    console.log(match);
+    const date = req.query.created ? new Date(req.query.created) : new Date();
 
-    //TODO: try Memory.aggregate
-    const agg = await Memory.aggregate([
-        //,
-        {
-            $sort: { created: -1 }
-        },
-        { 
-            $match: { created: { $lt: new Date(req.query.created) } }
-        },
-        {
-           $limit: 2
-        },
-        {
-            $lookup: { 
-                from: "users",
-                localField: "author",
-                foreignField: "_id",
-                as: "author"
-            }
-        },
-        {
-            $unwind: "$author" //single object instead of array
-        },
-        {
-            $lookup: {
-                from: "images",
-                localField: "gallery",
-                foreignField: "_id",
-                as: "gallery"
-            }
-        },
-        {
-            $project: {
-                id: 1,
-                title: 1,
-                text: 1,
-                created: { $dateToString: { date: "$created" } },
-                "author.username": 1,
-                isPrivate: 1,
-                gallery: 1
-            }
-        }
-        ]);
-    console.log("aggregation", agg[0].author);
-    res.send({ memories });
+    console.log(date);
+    const sort = { $sort: { created: -1 } };
+    const match = { $match: { isPrivate: false, created: { $lt: date } } };
+    const limit = { $limit: 2 };
+    const lookup = { $lookup: {
+        from: "users",
+        localField: "author",
+        foreignField: "_id",
+        as: "author"
+    }};
+    const unwind = { $unwind: "$author" };
+    const project = { $project: {
+        id: 1,
+        title: 1,
+        text: 1,
+        isPrivate: 1,
+        created: { $dateToString: { date: "$created" } },// defaults to ISOString
+        "author.username": 1
+    }};
+
+    const pipe = Memory.aggregate([ sort, match, limit, lookup, unwind, project ]);
+    const memories = await pipe.exec();
+    console.log(memories);
+
+    if(req.query.created) {
+        return res.send({ memories });
+    }
+
+    res.render("index", { memories });
 }));
 
 //app.post("/test", body("myinput").not().isEmpty().bail().withMessage("is empty").trim().escape().isLength({ min: 5 }).withMessage("my message"), (req, res) => {
