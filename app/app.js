@@ -68,18 +68,21 @@ app.engine("ejs", ejs_mate);
 app.use(authRouter);
 app.use(memoryRouter);
 
-app.get("/home", (req, res) => {
-    res.send("Home");
+app.get("/", (req, res) => {
+    res.render("index");
 });
 
-//TODO: query string to find next 10 memories
-app.get("/", handleError(async (req, res, next) => {
+//TODO: limit is set according to session storage
+app.get("/api/root", handleError(async (req, res, next) => {
     const date = req.query.created ? new Date(req.query.created) : new Date();
+    //TODO: if req.query.count not specified, throw an error
+    const count = parseInt(req.query.count);
 
-    console.log(date);
+    console.log(req.query.count);
+
     const sort = { $sort: { created: -1 } };
     const match = { $match: { isPrivate: false, created: { $lt: date } } };
-    const limit = { $limit: 2 };
+    const limit = { $limit: count };
     const lookup = { $lookup: {
         from: "users",
         localField: "author",
@@ -98,13 +101,13 @@ app.get("/", handleError(async (req, res, next) => {
 
     const pipe = Memory.aggregate([ sort, match, limit, lookup, unwind, project ]);
     const memories = await pipe.exec();
-    console.log(memories);
+    //console.log(memories);
 
-    if(req.query.created) {
+    //if(req.query.created) {
         return res.send({ memories });
-    }
+    //}
 
-    res.render("index", { memories });
+    //res.render("index", { memories });
 }));
 
 //app.post("/test", body("myinput").not().isEmpty().bail().withMessage("is empty").trim().escape().isLength({ min: 5 }).withMessage("my message"), (req, res) => {

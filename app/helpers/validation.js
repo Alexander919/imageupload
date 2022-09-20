@@ -53,6 +53,7 @@ module.exports = {
                 return res.render(renderOnErr, { ...renderObj });
             }
             //fetch exists; render a page into a string(html param) and send it back as a response to 'fetch'
+            //TODO: instead of rendering the entire page on the server, send just an error string and apply it on the frontend
             res.render(renderOnErr, { ...renderObj }, (err, html) => {
                 if(err) {
                     return console.log(err);
