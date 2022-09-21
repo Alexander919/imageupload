@@ -5,53 +5,45 @@
 </div>
 <button id="scroll">Load more</button>
 
-<script>
+<script type="module">
+    import { fetchUrlEncoded } from "/js/dataupload.js"
+
+    // async function fetchUrlEncoded(path, params) {
+    //     const searchParams = new URLSearchParams(params);
+
+    //     return fetch(`http://localhost:3000/${path}?${searchParams.toString()}`)
+    //         .then(res => res.json())
+    //         .catch(e => console.error(e));
+    // }
+
     // const lastMem = document.querySelector(".memory:last-child");
     const defaultNumberOfMemories = 2;
-    //TODO: check if session storage exists; if it does set defaultNumberOfMemories to count and scroll to the bottom
     //user refreshed the page or went back from another page
     const historyCount = sessionStorage.getItem("memoryCount");
-
     const count = historyCount || defaultNumberOfMemories;
 
     const memories = document.querySelector(".memories");
 
     console.log("memoryCount", count);
-    console.log(memories);
 
     document.querySelector("#scroll").addEventListener("click", function(e) {
         window.dispatchEvent(new CustomEvent("scroll"));
     });
 
-    async function fetchUrlEncoded(path, params) {
-        const searchParams = new URLSearchParams(params);
-
-        return fetch(`http://localhost:3000/${path}?${searchParams.toString()}`)
-            .then(res => res.json())
-            .catch(e => {
-                console.error(e);
-            });
+    function insertMemoriesHtml(data) {
+        memories.insertAdjacentHTML("beforeend", getMemoriesHTML(data.memories));
+        sessionStorage.setItem("memoryCount", memories.children.length);
     }
-    fetchUrlEncoded("api/root", {count})
-        .then(data => console.log("hey", data));
-    //TODO: see if you can build a query string dynamically
-    //TODO: create a function out of fetch
-    //fetch(`http://localhost:3000/api/root?count=${count}`)
-    //    .then(res => res.json())
-    //    .then(data => {
-    //        console.log(data);
-    //        memories.insertAdjacentHTML("beforeend", getMemoriesHTML(data.memories));
 
-    //        if (historyCount) {
-    //            //scroll to the bottom of page
-    //            window.scrollTo({ left: 0, top: document.body.scrollHeight - window.innerHeight, behavior: "smooth" });
-    //        }
-    //        //TODO: save number of memories to session storage
-    //        sessionStorage.setItem("memoryCount", memories.children.length);
-    //    })
-    //    .catch(e => {
-    //        console.error(e);
-    //    });
+    fetchUrlEncoded("api/root", { count })
+        .then(data => {
+            insertMemoriesHtml(data);
+
+            if (historyCount) {
+                //scroll to the bottom of page
+                window.scrollTo({ left: 0, top: document.body.scrollHeight - window.innerHeight, behavior: "smooth" });
+            }
+        });
 
     window.addEventListener("scroll", function(e) {
         //trigger when scrolled to the bottom of page
@@ -61,20 +53,11 @@
         const scrolledToBottom = (scrollTop + window.innerHeight) >= scrollHeight;
 
         if (scrolledToBottom) {
-            const memories = document.querySelector(".memories");
             const lastMem = memories.lastElementChild;
 
-            fetch(`http://localhost:3000/api/root?created=${lastMem.dataset.date}&count=${defaultNumberOfMemories}`)
-                .then(res => res.json())
-                .then(data => {
-                    console.log(data)
-                    memories.insertAdjacentHTML("beforeend", getMemoriesHTML(data.memories));
-                    //TODO: save number of memories to session storage
-                    sessionStorage.setItem("memoryCount", memories.children.length);
-                })
-                .catch(e => {
-                    console.error(e);
-                });
+            fetchUrlEncoded("api/root", { created: lastMem.dataset.date, count: defaultNumberOfMemories })
+                .then(data => insertMemoriesHtml(data));
+
             console.log("Bottom of page");
         }
     });

@@ -30,6 +30,7 @@ function hideSpinner(timer) {
 }
 
 //params: (<FormData object>, <POST path>)
+//TODO: rename to fetchMultipart
 export default async function uploadData(formData, path) {
     formData.set("fetch", "submitted by fetch function in client"); //let server know that response goes back to fetch
     const timer = showSpinner(spinnerId);
@@ -43,6 +44,7 @@ export default async function uploadData(formData, path) {
 
         hideSpinner(timer);
 
+        //TODO: move to function envocation place
         if(data.render) { //html from the server
             document.querySelector("html").innerHTML = data.render;
         }else if (typeof data.redirect === "string")
@@ -53,4 +55,12 @@ export default async function uploadData(formData, path) {
     } finally {
         hideSpinner(timer);
     }
+}
+
+export async function fetchUrlEncoded(path, params) {
+    const searchParams = new URLSearchParams(params);
+
+    return fetch(`http://localhost:3000/${path}?${searchParams.toString()}`)
+        .then(res => res.json())
+        .catch(e => console.error(e));
 }
