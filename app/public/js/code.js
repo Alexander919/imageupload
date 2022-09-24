@@ -17,6 +17,8 @@ function hideSpinner(spinner, timer) {
     clearTimeout(timer);
 }
 
+//register submit event
+//params: (<form id>, <POST path>, [[func to run before fetch], [params to func]])
 function createSubmitImageUploadEvent(formId, path, func, ...params) {
 
     document.getElementById(formId).addEventListener("submit", async function(e) {

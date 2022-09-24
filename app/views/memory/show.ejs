@@ -1,0 +1,21 @@
+<% layout("layouts/boiler") %>
+
+<div>
+    <h1><%= memory.title %> </h1>
+    <p><%= memory.text %> </p>   
+    <h2><%= memory.author.username %></h2>
+    <div class="images">
+        <% memory.gallery.forEach(({ preview, originalname, size }) => { %>
+        <div class="image">
+            <ul>
+                <li>Name: <%= originalname %>  </li>
+                <li>Size: <%= size %>  </li>
+            </ul>
+            <img src="<%= preview %>">
+        </div>
+        <% }) %>
+    </div>
+    <p>
+        <a href="/memory/edit/<%= memory._id %>">Edit</a>
+    </p>
+</div>

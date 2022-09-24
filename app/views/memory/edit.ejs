@@ -1,0 +1,68 @@
+<% layout("layouts/boiler") %>
+
+    <h1>Edit memory</h1>
+    <form id="edit-form" action="/memory/edit/<%= memory._id %>" method="POST">
+        <%# New images upload %>
+            <div>
+                <label for="title">Title:</label>
+                <input type="text" id="title" name="memory[title]" value="<%= memory.title %>">
+                <p><%= helpers.getErrorForField(errors, "memory.title") %> </p>
+            </div>
+            <br>
+            <div>
+                <!-- TODO: create an element that will show rendered output from this textarea(markdown-it module) -->
+                <label for="text">Text:</label>
+                <textarea name="memory[text]" id="text" cols="30" rows="10"><%= memory.text %></textarea>
+
+            </div>
+            <br>
+            <div>
+                <label for="private">Private memory?</label>
+                <input type="checkbox" id="private" name="private" <%= memory.isPrivate ? "checked" : "" %> >
+
+            </div>
+            <br>
+
+            <div>
+                <label for="fileElem">Add images to upload:</label>
+                <!-- <input type="file" id="img" name="images" multiple accept="image/*"> -->
+                <br>
+                <div>
+                    <input type="file" id="fileElem" name="images" multiple accept="image/*" hidden>
+                    <a href="#" id="fileSelect">Click to add images</a>
+                </div>
+                <div id="fileList">
+                    <p>No files selected!</p>
+                </div>
+            </div>
+            <br>
+            <hr>
+            <br>
+            <p>Select images to delete</p>
+            <%# Images from the database %> 
+            <div class="images">
+                <%# 'preview' comes from mongoose virtual(see models/image.js) %> 
+                <% memory.gallery.forEach(({ _id, path, originalname, size, filename, preview }, i)=> { %>
+                    <div class="image">
+                        <%# checked elements are added to the 'delete' array %> 
+                        <input class="deleteImageCheckbox" type="checkbox" id="image<%= i %>" name="delete[]" value="<%= _id %>" hidden>
+                        <%# label is connected to the <input type="checkbox"> When a label is clicked the respective checkbox is checked %>  
+                        <label for="image<%= i %>" title="Tap to select/unselect">
+                            <ul>
+                                <li>Name: <%= originalname %></li>
+                                <li>Size: <%= size %></li>
+                            </ul>
+                            <div>
+                                <img src="<%= preview %>">
+                                <br>
+                            </div>
+                        </label>
+                    </div>
+                <% }) %>
+            </div>
+            <br>
+
+            <input type="submit" value="Update">
+    </form>
+
+    <script type="module" src="/js/fileinput.js?form=edit-form&file=fileElem&list=fileList&select=fileSelect"></script>

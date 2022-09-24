@@ -1,6 +1,3 @@
-<div id="loading" class="hidden">
-    <h2>Loading...</h2>
-</div>
 <% if(success) { %>
     <div class="notify-message success">
         <h3><%= success.msg %></h3>
@@ -9,5 +6,10 @@
 <% if(failure) { %>
     <div class="notify-message failure">
         <h3><%= failure.msg %> </h3>
+    </div>
+<% } %>
+<% if(error) { %>
+    <div class="notify-message error">
+        <h3><%= error.msg %> </h3>
     </div>
 <% } %>

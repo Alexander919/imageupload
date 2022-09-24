@@ -1,6 +1,74 @@
-<% layout("layouts/boiler") %>
-<h1>All images</h1>
-<%# console.log(_locals, "all images") %> 
-<% images.forEach((img, i) => { %>
-    <img src="<%= img.preview %>">
-<% }) %>
+<% layout("layouts/boiler") %> 
+<h1>All memories</h1>
+<div class="memories">
+
+</div>
+<button id="scroll">Load more</button>
+
+<script type="module">
+    import { fetchUrlEncoded } from "/js/dataupload.js"
+
+    // const lastMem = document.querySelector(".memory:last-child");
+    const defaultNumberOfMemories = 2;
+    //user refreshed the page or went back from another page
+    const historyCount = sessionStorage.getItem("memoryCount");
+    const count = historyCount || defaultNumberOfMemories;
+
+    const memories = document.querySelector(".memories");
+
+    console.log("memoryCount", count);
+
+    document.querySelector("#scroll").addEventListener("click", function(e) {
+        window.dispatchEvent(new CustomEvent("scroll"));
+    });
+
+    function insertMemoriesHtml(data) {
+        memories.insertAdjacentHTML("beforeend", getMemoriesHTML(data.memories));
+        sessionStorage.setItem("memoryCount", memories.children.length);
+    }
+
+    fetchUrlEncoded("api/root", { count })
+        .then(data => {
+            insertMemoriesHtml(data);
+
+            if (historyCount) {
+                //scroll to the bottom of the page but do NOT trigger scrolledToBotttom
+                window.scrollTo({ left: 0, top: document.body.scrollHeight - window.innerHeight, behavior: "smooth" });
+            }
+        });
+
+    window.addEventListener("scroll", function(e) {
+        //trigger when scrolled to the bottom of page
+        //https://stackoverflow.com/a/22394544
+        const scrollTop = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
+        const scrollHeight = (document.documentElement && document.documentElement.scrollHeight) || document.body.scrollHeight;
+        const scrolledToBottom = (scrollTop + window.innerHeight) >= scrollHeight;
+
+        if (scrolledToBottom) {
+            const lastMem = memories.lastElementChild;
+
+            fetchUrlEncoded("api/root", { created: lastMem.dataset.date, count: defaultNumberOfMemories })
+                .then(data => insertMemoriesHtml(data));
+
+            console.log("Bottom of page");
+        }
+    });
+
+    function getMemoriesHTML(data) {
+        const html = data.map(({ title, text, author, _id:id, isPrivate, created }) => {
+            if(!isPrivate) {
+                return `
+                    <div class="memory" style="border: 1px solid" data-date="${ created }">
+                        <h1>${ title }</h1>
+                        <p>${ text }</p>
+                        <h2>${ author.username }</h2>
+                        <em>${ created }</em>
+                        <p><a href="/memory/show/${ id }">Show me more</a></p>
+                    </div>
+                `;
+            }
+            return null;
+        });
+        return html.filter(str => str).join("\n");
+    }
+</script>

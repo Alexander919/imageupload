@@ -1,4 +1,4 @@
-const { body, validationResult } = require('express-validator');
+const { body, check, validationResult } = require('express-validator');
 const User = require("../models/user");
 
 module.exports = {
@@ -32,15 +32,34 @@ module.exports = {
         body("password").trim().notEmpty().bail().withMessage("Password field can't be empty").isStrongPassword().withMessage("Password is not strong enough(must have at least 8 characters contain 1 uppercase, 1 number and 1 symbol"),
     validateRegisterConfirm:
         body("confirm").trim().notEmpty().bail().withMessage("Field can't be empty").custom((val, { req }) => val === req.body.password).withMessage("Passwords do not match"),
-    checkValidationErrors: renderOnErr => {
-        return (req, res, next) => {
+    checkValidationErrors: (renderOnErr, model, popFields) => {
+        return async (req, res, next) => {
             const result = validationResult(req);
 
             if (result.isEmpty()) { //no validation errors
                 return next();
             }
+            //if there are any validation errors check if submit is done by fetch. Because of dryRun it is not included with other request errors(result)
+            //const fetchError = await body("fetch").not().exists().run(req, { dryRun: true });
+            const renderObj = { errors: result };
 
-            res.render(renderOnErr, { error: result });
+            if(model) {
+                const modelObj = await model.findById(req.params.id).populate(popFields);
+                const [ modelName ] = renderOnErr.split("/");
+                renderObj[modelName] = modelObj;
+            }
+            //fetch does not exist; submit is done using form
+            if(!req.body.fetch) {
+                return res.render(renderOnErr, { ...renderObj });
+            }
+            //fetch exists; render a page into a string(html param) and send it back as a response to 'fetch'
+            //TODO: instead of rendering the entire page on the server, send just an error string and apply it on the frontend
+            res.render(renderOnErr, { ...renderObj }, (err, html) => {
+                if(err) {
+                    return console.log(err);
+                }
+                res.send({ render: html });
+            });
         }
     },
     registerUser: () => {
@@ -72,5 +91,9 @@ module.exports = {
             req.flash("failure", "Failed to login. Check your credentials.");
             res.redirect("/signin");
         }
-    }
+    },
+    validateMemoryTitle:
+        body("memory.title").trim().notEmpty().bail().withMessage("Title field must not be empty").escape().isLength({ min: 2, max: 50 }).withMessage("Length of title must be in range between 2 - 50 characters"),
+    validateMemoryText:
+        body("memory.text").trim().escape(),
 };

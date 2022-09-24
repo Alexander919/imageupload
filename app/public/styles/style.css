@@ -43,11 +43,16 @@
 }
 
 .failure {
+    background-color: orange;
+    color: azure;
+}
+
+.error {
     background-color: red;
     color: azure;
 }
 
-.notify-message, #loading {
+.notify-message, #spinner {
   position: fixed; 
   width: 40vw; 
   margin: auto; 
