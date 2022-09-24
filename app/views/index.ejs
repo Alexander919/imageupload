@@ -8,14 +8,6 @@
 <script type="module">
     import { fetchUrlEncoded } from "/js/dataupload.js"
 
-    // async function fetchUrlEncoded(path, params) {
-    //     const searchParams = new URLSearchParams(params);
-
-    //     return fetch(`http://localhost:3000/${path}?${searchParams.toString()}`)
-    //         .then(res => res.json())
-    //         .catch(e => console.error(e));
-    // }
-
     // const lastMem = document.querySelector(".memory:last-child");
     const defaultNumberOfMemories = 2;
     //user refreshed the page or went back from another page
@@ -40,7 +32,7 @@
             insertMemoriesHtml(data);
 
             if (historyCount) {
-                //scroll to the bottom of page
+                //scroll to the bottom of the page but do NOT trigger scrolledToBotttom
                 window.scrollTo({ left: 0, top: document.body.scrollHeight - window.innerHeight, behavior: "smooth" });
             }
         });
