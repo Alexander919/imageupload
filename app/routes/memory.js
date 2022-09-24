@@ -47,7 +47,7 @@ router.post("/memory/new", requireSignIn,
         await memory.save();
 
         req.flash("success", "Memory created!");
-        res.send({ redirect: "/" });
+        res.send({ redirect: "/?noscroll=true" });
 }));
 
 router.get("/memory/edit/:id", handleError(async (req, res) => {
@@ -92,7 +92,7 @@ router.post("/memory/edit/:id",
         await memory.save();
 
         req.flash("success", "Updated successfully!");
-        res.send({ redirect: "/" });
+        res.send({ redirect: "/?noscroll=true" });
 }));
 
 module.exports = router;

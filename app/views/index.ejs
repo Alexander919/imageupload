@@ -1,12 +1,10 @@
 <% layout("layouts/boiler") %> 
 <h1>All memories</h1>
-<div class="memories">
-
-</div>
-<button id="scroll">Load more</button>
+<div class="memories"></div>
+<button id="scrollbtn">Load more</button>
 
 <script type="module">
-    import { fetchUrlEncoded } from "/js/dataupload.js"
+    import fetchData from "/js/dataupload.js"
 
     // const lastMem = document.querySelector(".memory:last-child");
     const defaultNumberOfMemories = 2;
@@ -18,7 +16,7 @@
 
     console.log("memoryCount", count);
 
-    document.querySelector("#scroll").addEventListener("click", function(e) {
+    document.querySelector("#scrollbtn").addEventListener("click", function(e) {
         window.dispatchEvent(new CustomEvent("scroll"));
     });
 
@@ -27,13 +25,14 @@
         sessionStorage.setItem("memoryCount", memories.children.length);
     }
 
-    fetchUrlEncoded("api/root", { count })
+    fetchData("api/root", null, { count })
         .then(data => {
             insertMemoriesHtml(data);
+            const noScroll = (new URL(window.location.href)).searchParams.get("noscroll") === "true";
 
-            if (historyCount) {
+            if (historyCount && !noScroll) {
                 //scroll to the bottom of the page but do NOT trigger scrolledToBotttom
-                window.scrollTo({ left: 0, top: document.body.scrollHeight - window.innerHeight, behavior: "smooth" });
+                window.scroll({ left: 0, top: document.body.scrollHeight - window.innerHeight, behavior: "smooth" });
             }
         });
 
@@ -47,7 +46,7 @@
         if (scrolledToBottom) {
             const lastMem = memories.lastElementChild;
 
-            fetchUrlEncoded("api/root", { created: lastMem.dataset.date, count: defaultNumberOfMemories })
+            fetchData("api/root", null, { created: lastMem.dataset.date, count: defaultNumberOfMemories })
                 .then(data => insertMemoriesHtml(data));
 
             console.log("Bottom of page");

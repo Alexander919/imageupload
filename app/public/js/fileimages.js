@@ -1,4 +1,4 @@
-import uploadData from "/js/dataupload.js"
+import fetchData from "/js/dataupload.js"
 //a global Map of all Files
 //map: id -> File
 const FilesMap = new Map();
@@ -37,7 +37,16 @@ export default function displayImagesToUpload(form, div) {
     form.addEventListener("submit", function(e) {
         e.preventDefault();
         const formData = updateFileInput(this);
-        uploadData(formData, this.getAttribute("action").slice(1));
+        formData.set("fetch", "submitted by fetch function in client"); //let server know that response goes back to fetch
+
+        fetchData(this.getAttribute("action").slice(1), { method: "POST", body: formData })
+            .then(data => {
+                if (data.render) { //html from the server
+                    document.querySelector("html").innerHTML = data.render;
+                } else if (typeof data.redirect === "string") {
+                    window.location = data.redirect;
+                }
+            });
     });
     //triggered when we 'Open' new images
     return function() {
