@@ -68,6 +68,11 @@ app.engine("ejs", ejs_mate);
 app.use(authRouter);
 app.use(memoryRouter);
 
+app.get("/test", (req, res) => {
+    console.log(req.query);
+    res.send("test");
+});
+
 app.get("/", (req, res) => {
     res.render("index");
 });
@@ -78,7 +83,7 @@ app.get("/api/root", handleError(async (req, res, next) => {
     //TODO: if req.query.count not specified, throw an error
     const count = parseInt(req.query.count);
 
-    console.log(req.query.count);
+    console.log("/api/root", req.query.count);
 
     const sort = { $sort: { created: -1 } };
     const match = { $match: { isPrivate: false, created: { $lt: date } } };

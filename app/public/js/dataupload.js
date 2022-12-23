@@ -28,39 +28,17 @@ function hideSpinner(timer) {
     if (spinner) spinner.remove();
     clearTimeout(timer);
 }
-
-//params: (<FormData object>, <POST path>)
-//TODO: rename to fetchMultipart
-export default async function uploadData(formData, path) {
-    formData.set("fetch", "submitted by fetch function in client"); //let server know that response goes back to fetch
+//params: path (mandatory); 
+//fetchData - object like { method: "POST", body: formData } or undefined (optional)
+//params - object like { param1: "bla", param2: "bla bla" } or undefined (optional)
+export default async function fetchData(path, fetchObj, params) {
+    const searchParams = new URLSearchParams(params);
     const timer = showSpinner(spinnerId);
 
-    try {
-        const res = await fetch(`http://localhost:3000/${path}`, {
-            method: "POST",
-            body: formData
-        });
-        const data = await res.json();
-
-        hideSpinner(timer);
-
-        //TODO: move to function envocation place
-        if(data.render) { //html from the server
-            document.querySelector("html").innerHTML = data.render;
-        }else if (typeof data.redirect === "string")
-            window.location = data.redirect;
-    } catch (err) {
-        console.dir(err);
-        //window.location = "/test";
-    } finally {
-        hideSpinner(timer);
-    }
-}
-
-export async function fetchUrlEncoded(path, params) {
-    const searchParams = new URLSearchParams(params);
-
-    return fetch(`http://localhost:3000/${path}?${searchParams.toString()}`)
-        .then(res => res.json())
+    return fetch(`http://localhost:3000/${path}/?${searchParams.toString()}`, fetchObj)
+        .then(res => {
+            hideSpinner(timer);
+            return res.json();
+        })
         .catch(e => console.error(e));
 }
